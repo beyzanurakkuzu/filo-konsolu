@@ -377,6 +377,64 @@ tbody tr.on { background: var(--accent-soft); }
   .stages { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .search { flex: 1 1 100%; order: 5; }
 }
+
+/* Telefon: harita üstte, filtreler ve hat listesi haritanın altında; büyük dokunma alanları */
+@media (max-width: 700px) {
+  body { font-size: 15px; }
+  .app { padding-block: 8px 16px; gap: 8px; }
+  .top { gap: 8px 10px; }
+  .brand b { font-size: 21px; }
+  .brand span, .clock { display: none; }
+  .demo { font-size: 10.5px; }
+  .tabs { order: 4; width: 100%; }
+  .tab { padding: 9px 12px; font-size: 14.5px; }
+  .search { order: 5; flex: 1 1 100%; }
+  .search input { padding: 11px 12px 11px 34px; font-size: 16px; }
+  .search .hits button { padding: 12px; }
+  .region { min-width: 116px; padding: 8px 11px; }
+  .region .rn { font-size: 16px; }
+  .mapwrap { height: auto !important; min-height: 0; padding-top: 54vh; display: flex; flex-direction: column; overflow: hidden; }
+  #map, #gmap { position: absolute; top: 0; left: 0; right: 0; height: 54vh; inset: 0 0 auto 0; }
+  .maptools { top: 8px; right: 8px; }
+  .maptools button { width: 40px; height: 40px; font-size: 18px; }
+  .attr { top: calc(54vh - 22px); bottom: auto; }
+  .legend { position: static; order: 1; max-width: none; border-radius: 0; border-width: 1px 0 0; box-shadow: none; padding: 6px; gap: 4px; }
+  .legend .static:first-child { width: 100%; padding-bottom: 0; }
+  .legend button { padding: 8px 10px; font-size: 13.5px; border: 1px solid var(--line); }
+  .lines { position: static; order: 2; width: auto; max-height: none; border-radius: 0; border-width: 1px 0 0; box-shadow: none; }
+  .lines-list { max-height: 60vh; }
+  .lines-h b { font-size: 21px; }
+  .lines-h .chips button, .ltabs button { padding: 8px 12px; font-size: 14px; }
+  .lrow { padding: 12px 14px; }
+  .lrow .code { font-size: 15.5px; }
+  .lrow .nm { font-size: 14px; }
+  .lrow .sub { font-size: 12.5px; }
+  .vhead { padding: 16px; }
+  .vtitle b { font-size: 30px; }
+  .sec { padding: 14px; }
+  .kv { grid-template-columns: 104px 1fr; font-size: 14px; }
+  .health, .tstats { grid-template-columns: 1fr 1fr; }
+  .actions { grid-template-columns: 1fr; }
+  .btn { padding: 12px; font-size: 14.5px; }
+  .alert { padding: 11px 12px 11px 0; }
+  .wrow { padding: 10px; font-size: 13.5px; grid-template-columns: 30px 70px minmax(0, 1fr) auto; }
+  .wrow .sp { display: none; }
+  .srow { font-size: 14px; padding-block: 7px; }
+  .viewhead { padding: 12px; gap: 8px; }
+  .viewhead h2 { width: 100%; }
+  .viewhead select, .viewhead input { flex: 1 1 45%; padding: 9px; font-size: 16px; }
+  .viewhead .count { margin-left: 0; width: 100%; }
+  td, th { padding: 10px; }
+  #vt th:nth-child(3), #vt td:nth-child(3), #vt th:nth-child(7), #vt td:nth-child(7), #vt th:nth-child(8), #vt td:nth-child(8), #vt th:nth-child(9), #vt td:nth-child(9) { display: none; }
+  .upd { padding: 12px; gap: 12px; }
+  .relh b { font-size: 21px; }
+  .relact { width: 100%; }
+  .relact .btn { flex: 1 1 100%; }
+  .stages { grid-template-columns: 1fr 1fr; }
+  .grid2 { grid-template-columns: 1fr; }
+  .legend2 button { padding: 7px 10px; font-size: 13px; }
+  .vbar { grid-template-columns: 90px 1fr 44px; }
+}
 </style>
 
 <div class="app">
@@ -1089,9 +1147,11 @@ function trackHTML(v) {
     <button type="button" id="follow" class="btn" aria-pressed="${st.follow}">${st.follow ? "Haritada takip ediliyor · bırak" : "Haritada takip et"}</button>`;
 }
 
+const PHONE = matchMedia("(max-width: 700px)");
 function select(v, fly) {
   st.sel = v || null;
   renderSide(); drawSel();
+  if (v && PHONE.matches) requestAnimationFrame(() => $("#side").scrollIntoView({ behavior: REDUCED ? "auto" : "smooth", block: "start" }));
   if (v && fly && (st.view === "harita" || st.view === "gps")) {
     const pts = v.route ? v.route.pts.map(p => P(p[0], p[1])) : [P(v.lat, v.lon)];
     if (v.route) fitBounds(pts, 0.08); else { const [x, y] = P(v.lat, v.lon); setVB([x - 90, y - 55, 180, 110]); }
@@ -1334,7 +1394,7 @@ function useGoogle() {
     { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
     { featureType: "water", elementType: "geometry", stylers: [{ color: "#10242d" }] },
   ];
-  const map = new g.Map(box, { center: { lat: 39.93, lng: 32.80 }, zoom: 11, disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false, styles: LIGHT });
+  const map = new g.Map(box, { center: { lat: 39.93, lng: 32.80 }, zoom: 11, disableDefaultUI: true, gestureHandling: matchMedia("(max-width: 700px)").matches ? "cooperative" : "greedy", clickableIcons: false, styles: LIGHT });
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const c = { ok: css("--ok"), est: css("--est"), off: css("--off"), gar: css("--off"), crit: css("--crit"), mark: css("--mark"), accent: css("--accent"), ink: css("--ink"), panel: css("--panel") };
   const LL = (lat, lon) => ({ lat, lng: lon });
