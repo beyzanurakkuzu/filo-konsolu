@@ -12,3 +12,12 @@ GPS kopma ve yanlış konum raporu, uyarılar ve kademeli güncelleme ekranı.
 - Sayfa arama motorlarına kapalıdır (`noindex`).
 
 Rubuplus · 2026
+
+## Yerel ağda HTTPS ile yayınlama
+
+```
+python3 serve_https.py          # https://<bu bilgisayarın IP'si>:8443/
+```
+Sertifika (`cert.pem`, `key.pem`) repoya konmaz; varsayılan klasör `~/StudioProjects/filo-konsolu-sertifika`.
+Kendinden imzalı sertifikada tarayıcı ilk girişte uyarı verir. Google Maps anahtarına bu adres de
+(ör. `https://192.168.1.202:8443/*`) eklenmelidir.
