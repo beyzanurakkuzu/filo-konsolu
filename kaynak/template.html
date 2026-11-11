@@ -573,8 +573,13 @@ const ERRS = ["SHA-256 uyuşmadı, yeniden indirilecek", "Disk dolu (%96), önbe
   [["ok", 380], ["wait", 74], ["dl", 31], ["queued", 15], ["err", 6], ["rb", 2]].forEach(([u, n]) => { for (let j = 0; j < n; j++) { const v = target[k++]; v.upd = u; v.panel = u === "ok" ? "1.4.1" : "1.4.0"; v.updAgo = u === "ok" ? 60 + Math.floor(rnd() * 2800) : 5 + Math.floor(rnd() * 400); if (u === "err") v.updNote = ERRS[j % ERRS.length]; if (u === "rb") v.updNote = "5 dk içinde sağlıklı bildirimi gelmedi, 1.4.0'a dönüldü"; } });
   order.slice(508).forEach((v, i) => { v.upd = "next"; v.panel = i < 160 ? "1.3.2" : "1.4.0"; v.updAgo = 0; });
 }
-const BAKIM = ["Periyodik bakım", "Lastik değişimi", "Klima arızası", "Kaporta onarımı", "Fren kontrolü"];
-V.forEach(v => { if (v.status === "garajda") v.garMin = 20 + Math.floor(rnd() * 600); if (v.status === "bakim") { v.garMin = 300 + Math.floor(rnd() * 4000); v.bakim = pick(BAKIM); } });
+// Garajdaki araç için bildiklerimiz: garaj alanında olduğu, son seferin ne zaman bittiği, cihazın açık olup olmadığı.
+// Bakım ya da arıza sebebi bu sistemde yok (EGO'nun bakım kayıtlarında). "bakim" = 1 günden uzun seferde değil.
+V.forEach(v => {
+  if (v.status === "garajda") { v.garMin = 20 + Math.floor(rnd() * 600); v.devOn = rnd() < 0.55; }
+  if (v.status === "bakim") { v.garMin = 1500 + Math.floor(rnd() * 6000); v.devOn = rnd() < 0.2; }
+  if (v.status === "garajda" || v.status === "bakim") v.lastSeen = v.devOn ? 0 : Math.min(v.garMin, 10 + Math.floor(rnd() * v.garMin));
+});
 const byKapi = Object.fromEntries(V.map(v => [v.kapi, v]));
 
 // Crafted vehicles for the scenarios
@@ -817,7 +822,7 @@ window.addEventListener("resize", () => { drawRegions(); drawBuses(); drawGps();
 /* ---------- Vehicle helpers ---------- */
 function nextStopIdx(v) { if (!v.route) return -1; const T = v.route.stopT; for (let i = 0; i < T.length; i++) if (T[i] > v.t + 0.0005) return i; return T.length - 1; }
 const TYPE = { K: "Körüklü", S: "Solo", A: "Solo · Karsan Atak" };
-const STAT = { hatta: ["Hatta", "ok"], garajda: ["Garajda", "off"], cevrimdisi: ["Çevrimdışı", "off"], bakim: ["Bakımda", "off"] };
+const STAT = { hatta: ["Hatta", "ok"], garajda: ["Garajda", "off"], cevrimdisi: ["Çevrimdışı", "off"], bakim: ["1+ gündür seferde değil", "warn"] };
 function statusPill(v) {
   if (v.issues.some(a => a.sev === "crit")) return `<span class="pill crit">Acil sorun</span>`;
   if (v.status === "hatta" && v.src === "est") return `<span class="pill est">Hatta · tahmini konum</span>`;
@@ -839,7 +844,7 @@ function renderRail() {
   const loss24 = GPS.filter(e => e.ago < 1440 && (!st.region || e.region === st.region)).length;
   h += `<div class="kpis">
     <div class="kpi"><b>${fmt(c.hatta)}</b><span><i class="dot" style="background:var(--ok)"></i>Hatta</span></div>
-    <div class="kpi"><b>${fmt(c.gar)}</b><span><i class="dot" style="background:var(--off);opacity:.55"></i>Garaj/bakım</span></div>
+    <div class="kpi"><b>${fmt(c.gar)}</b><span><i class="dot" style="background:var(--off);opacity:.55"></i>Garajda</span></div>
     <div class="kpi"><b>${fmt(c.off)}</b><span><i class="dot" style="background:var(--off)"></i>Çevrimdışı</span></div>
     <div class="kpi"><b style="color:var(--crit)">${c.bad}</b><span>Sorunlu</span></div>
     <div class="kpi"><b>${loss24}</b><span>GPS kaybı · 24 sa</span></div></div>`;
@@ -874,8 +879,8 @@ function renderWatch() {
       <div class="chips">${GROUPS.filter(g => V.some(v => v.region === R.n && inGroup(v, g) && v.status === "hatta")).map(g => `<button data-g="${g.id}" aria-pressed="${st.groups.has(g.id)}">${esc(g.name)}</button>`).join("")}</div>
       ${st.watched.size || st.groups.size ? `<button class="clear" id="clearW">Haritayı temizle</button>` : ""}
       <div class="ltabs" role="tablist"><button role="tab" data-t="lines" aria-selected="${st.ltab === "lines"}">Hatlar · ${L.length}</button><button role="tab" data-t="garage" aria-selected="${st.ltab === "garage"}">Garajda · ${garV.length}</button></div>`;
-    cols = st.ltab === "garage" ? `<div class="lines-cols"><span>Kapı no</span><span>Durum · ne zamandır</span><span style="text-align:right">Tip</span></div>` : `<div class="lines-cols"><span>Hat</span><span>Güzergâh · gidiş / dönüş</span><span style="text-align:right">Araç</span></div>`;
-    rows = st.ltab === "garage" ? garV.slice().sort((a, b) => (b.status === "bakim") - (a.status === "bakim") || b.garMin - a.garMin).map(v => `<button class="lrow${st.sel === v ? " on" : ""}" data-k="${v.kapi}" aria-pressed="${st.sel === v}"><span class="code">${v.kapi}</span><span class="nm">${v.status === "bakim" ? `<b style="color:var(--warn)">Bakımda</b> · ${esc(v.bakim)}` : "Garajda"}</span><span class="cnt" style="font-size:13px;font-family:var(--body);font-weight:500">${v.type === "K" ? "Körüklü" : "Solo"}</span><span class="sub">${durText(v.garMin)} · BusPanel ${v.panel}${v.upd === "wait" || v.upd === "dl" || v.upd === "queued" ? ` · <span class="warn">güncelleme bekliyor</span>` : v.upd === "err" ? ` · <span class="bad">güncelleme hatası</span>` : ""}</span></button>`).join("") || `<p style="padding:14px;margin:0;color:var(--muted)">Garajda araç yok.</p>` : L.map(r => `<button class="lrow" data-c="${esc(r.code)}" aria-pressed="${st.watched.has(r.code)}"><span class="code">${esc(r.code)}</span><span class="nm" title="${esc(lineName(r.code))}">${esc(lineName(r.code)) || "—"}</span><span class="cnt">${r.n}</span><span class="sub"><span class="dbar"><i style="width:${r.go / r.n * 100}%;background:var(--accent)"></i><i style="width:${r.back / r.n * 100}%;background:var(--route)"></i></span>${r.go} gidiş · ${r.back} dönüş ${prob(r)}</span></button>`).join("") || `<p style="padding:14px;margin:0;color:var(--muted)">Bu bölgede sefer yapan otobüs yok.</p>`;
+    cols = st.ltab === "garage" ? `<div class="lines-cols"><span>Kapı no</span><span>Garajda · son sefer</span><span style="text-align:right">Tip</span></div>` : `<div class="lines-cols"><span>Hat</span><span>Güzergâh · gidiş / dönüş</span><span style="text-align:right">Araç</span></div>`;
+    rows = st.ltab === "garage" ? garV.slice().sort((a, b) => b.garMin - a.garMin).map(v => `<button class="lrow" data-k="${v.kapi}" aria-pressed="${st.sel === v}"><span class="code">${v.kapi}</span><span class="nm">${v.status === "bakim" ? `<b style="color:var(--warn)">${durText(v.garMin)}</b> seferde değil` : `Son sefer ${durText(v.garMin)} önce`}</span><span class="cnt" style="font-size:13px;font-family:var(--body);font-weight:500">${v.type === "K" ? "Körüklü" : "Solo"}</span><span class="sub"><span><i class="dot" style="background:var(--${v.devOn ? "ok" : "off"})"></i> Cihaz ${v.devOn ? "açık" : "kapalı · son görülme " + agoText(v.lastSeen)}</span> · BusPanel ${v.panel}${v.upd === "wait" || v.upd === "dl" || v.upd === "queued" ? ` · <span class="warn">güncelleme bekliyor</span>` : v.upd === "err" ? ` · <span class="bad">güncelleme hatası</span>` : ""}</span></button>`).join("") || `<p style="padding:14px;margin:0;color:var(--muted)">Garajda araç yok.</p>` : L.map(r => `<button class="lrow" data-c="${esc(r.code)}" aria-pressed="${st.watched.has(r.code)}"><span class="code">${esc(r.code)}</span><span class="nm" title="${esc(lineName(r.code))}">${esc(lineName(r.code)) || "—"}</span><span class="cnt">${r.n}</span><span class="sub"><span class="dbar"><i style="width:${r.go / r.n * 100}%;background:var(--accent)"></i><i style="width:${r.back / r.n * 100}%;background:var(--route)"></i></span>${r.go} gidiş · ${r.back} dönüş ${prob(r)}</span></button>`).join("") || `<p style="padding:14px;margin:0;color:var(--muted)">Bu bölgede sefer yapan otobüs yok.</p>`;
   }
   box.innerHTML = `<div class="lines-h">${head}</div>${cols}<div class="lines-list">${rows}</div>`;
   box.querySelectorAll(".lrow[data-r]").forEach(b => b.onclick = () => setRegion(+b.dataset.r));
@@ -978,7 +983,7 @@ function renderDetail(side, v) {
   <div class="vhead">
     <button class="back" id="back">← ${st.view === "araclar" ? "Listeye" : "Uyarılara"} dön</button>
     <div class="vtitle"><b>${v.kapi}</b><span class="plate">${v.plate}</span><span class="type">${TYPE[v.type]}</span></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${statusPill(v)}<span style="color:var(--muted);font-size:12.5px">${R.name} · ${esc(R.place)} · ${v.status === "cevrimdisi" ? "son görülme " + agoText(v.lastSeen) : "şimdi çevrimiçi"}</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${statusPill(v)}<span style="color:var(--muted);font-size:12.5px">${R.name} · ${esc(R.place)} · ${v.status === "garajda" || v.status === "bakim" ? "son sefer " + durText(v.garMin) + " önce · cihaz " + (v.devOn ? "açık" : "kapalı") : v.status === "cevrimdisi" ? "son görülme " + agoText(v.lastSeen) : "şimdi çevrimiçi"}</span></div>
   </div>
   <div class="side-scroll">
     <div class="sec">
@@ -1092,7 +1097,7 @@ function renderTable(rebuild) {
   if (rebuild || !$("#vt", view)) {
     view.innerHTML = `<div class="viewhead"><h2>Araçlar</h2>
       <select id="ftype" aria-label="Araç tipi"><option value="">Bütün tipler</option><option value="K">Körüklü</option><option value="S">Solo</option><option value="A">Karsan Atak</option></select>
-      <select id="fstat" aria-label="Durum"><option value="">Bütün durumlar</option><option value="sorun">Sorunlu</option><option value="hatta">Hatta</option><option value="garajda">Garajda</option><option value="cevrimdisi">Çevrimdışı</option><option value="bakim">Bakımda</option></select>
+      <select id="fstat" aria-label="Durum"><option value="">Bütün durumlar</option><option value="sorun">Sorunlu</option><option value="hatta">Hatta</option><option value="garajda">Garajda</option><option value="cevrimdisi">Çevrimdışı</option><option value="bakim">1+ gündür seferde değil</option></select>
       <select id="fver" aria-label="Sürüm"><option value="">Bütün sürümler</option><option>1.4.1</option><option>1.4.0</option><option>1.3.2</option></select>
       <input id="fq" type="search" placeholder="Kapı no, plaka, IP, hat" aria-label="Tabloda ara">
       <span class="count" id="vcount"></span></div>
@@ -1136,7 +1141,7 @@ function renderGpsBottom() {
       <div class="tablewrap">${tbl}</div></div>
     <div class="insight">
       <h4>Anten şüphesi</h4><p>Her yerde kopan araç: sorun büyük ihtimalle anten ya da cihazda.</p>
-      ${suspects.map(([k, es]) => `<button class="irow" data-k="${k}"><span><b>${k}</b> · ${new Set(es.map(e => e.code)).size} hat, ${es.length} kopma</span><span style="color:var(--crit)">bakıma</span></button>`).join("") || `<p>Bu bölgede yok.</p>`}
+      ${suspects.map(([k, es]) => `<button class="irow" data-k="${k}"><span><b>${k}</b> · ${new Set(es.map(e => e.code)).size} hat, ${es.length} kopma</span><span style="color:var(--crit)">anten kontrolü</span></button>`).join("") || `<p>Bu bölgede yok.</p>`}
       <h4>Sık kopan yerler</h4><p>Birçok aracın aynı yerde koptuğu noktalar: tünel, alt geçit ya da jammer.</p>
       ${spots.slice(0, 5).map(c => `<button class="irow" data-i="${GPS.indexOf(c[0])}"><span>Hat <b>${c[0].code}</b> · ${new Set(c.map(e => e.v.kapi)).size} araç</span><span class="num">${c.length} kez</span></button>`).join("") || `<p>Bu bölgede yok.</p>`}
     </div>`;
