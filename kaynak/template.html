@@ -1238,13 +1238,20 @@ function useGoogle() {
   setVB = function (vb) { map.panTo(toLL([vb[0] + vb[2] / 2, vb[1] + vb[3] / 2])); map.setZoom(Math.max(map.getZoom(), 15)); };
   $("#zin").onclick = () => map.setZoom(map.getZoom() + 1);
   $("#zout").onclick = () => map.setZoom(map.getZoom() - 1);
-  window.gm_authFailure = () => {
+  // Google hata verirse (faturalandırma, API kapalı, adres kilidi) karartılmış harita yerine OpenStreetMap
+  let fellBack = false;
+  const toOSM = msg => {
+    if (fellBack) return; fellBack = true; mo.disconnect();
     drawBuses = ORIG.drawBuses; drawSel = ORIG.drawSel; drawGps = ORIG.drawGps; drawRegions = ORIG.drawRegions; drawWatch = ORIG.drawWatch; fitBounds = ORIG.fitBounds; setVB = ORIG.setVB;
     box.hidden = true; svg.style.display = ""; $(".attr").hidden = false;
     $("#zin").onclick = () => zoomAt(1 / 1.5, st.vb[0] + st.vb[2] / 2, st.vb[1] + st.vb[3] / 2);
     $("#zout").onclick = () => zoomAt(1.5, st.vb[0] + st.vb[2] / 2, st.vb[1] + st.vb[3] / 2);
-    fitRegion(); toast("Google Maps anahtarı kabul edilmedi; OpenStreetMap haritası kullanılıyor.");
+    fitRegion(); toast(msg);
   };
+  window.gm_authFailure = () => toOSM("Google Maps anahtarı kabul edilmedi; OpenStreetMap haritası kullanılıyor.");
+  const broken = () => box.querySelector(".gm-err-container, .dismissButton") || /development purposes only/i.test(box.textContent || "");
+  const mo = new MutationObserver(() => { if (broken()) toOSM("Google Maps şu an kullanılamıyor (faturalandırma ya da API ayarı); OpenStreetMap haritası kullanılıyor."); });
+  mo.observe(box, { childList: true, subtree: true, characterData: true });
   drawRegions(); drawBuses(); drawGps(); fitRegion();
 }
 window.__useGoogle = () => { try { useGoogle(); } catch (e) { console.error(e); toast("Google Maps açılamadı; OpenStreetMap haritası kullanılıyor."); } };
