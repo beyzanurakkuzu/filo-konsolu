@@ -21,3 +21,11 @@ python3 serve_https.py          # https://<bu bilgisayarın IP'si>:8443/
 Sertifika (`cert.pem`, `key.pem`) repoya konmaz; varsayılan klasör `~/StudioProjects/filo-konsolu-sertifika`.
 Kendinden imzalı sertifikada tarayıcı ilk girişte uyarı verir. Google Maps anahtarına bu adres de
 (ör. `https://192.168.1.202:8443/*`) eklenmelidir.
+
+## Kaynak
+
+`kaynak/template.html` sayfanın kaynağı; `kaynak/routes.json` (BusPanel KML hatları) ve `kaynak/basemap.json`
+(OpenStreetMap'ten üretilmiş Ankara haritası) içine gömülür:
+```
+python3 kaynak/build.py index.html
+```

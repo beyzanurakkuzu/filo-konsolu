@@ -1,0 +1,1268 @@
+<title>Ankara Filo Konsolu</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: operations console. Header with views, region rail, then map (or view) beside a persistent detail/alerts panel. */
+:root {
+  --bg: #e9edec;
+  --panel: #ffffff;
+  --panel-2: #f4f6f5;
+  --ink: #13202a;
+  --muted: #5a6871;
+  --line: #d6dddd;
+  --accent: #0e6b70;
+  --accent-soft: #d5ebea;
+  --accent-ink: #ffffff;
+  --mark: #f2b705;
+  --land: #eceeec;
+  --road: #ffffff;
+  --road-case: #d3d8d7;
+  --park: #d6e8d2;
+  --water: #c9dfea;
+  --rail: #aab4b7;
+  --border: #9aa7aa;
+  --label: #6a777d;
+  --route: #6f7f86;
+  --r1: #dfe9f6; --r2: #e5f1e3; --r3: #f6ecdc; --r4: #efe3f1; --r5: #e2eff0;
+  --ok: #1f9d55;
+  --est: #e07b00;
+  --off: #8b969d;
+  --crit: #d3352b;
+  --warn: #c98a00;
+  --display: "Barlow Semi Condensed", "Arial Narrow", "Roboto Condensed", sans-serif;
+  --body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1418; --panel: #151f25; --panel-2: #1b262d; --ink: #e5ecee; --muted: #93a2aa; --line: #26343c;
+    --accent: #45b5ba; --accent-soft: #173a3d; --accent-ink: #06191a; --mark: #f2b705; --land: #10171b; --road: #2a363c; --road-case: #0a0f12; --park: #142519; --water: #10242d; --rail: #3d4a50; --border: #4a5a61; --label: #8a99a2; --route: #9aabb2;
+    --r1: #172433; --r2: #172a1d; --r3: #2c2416; --r4: #2a1c2d; --r5: #142a2c;
+    --ok: #39c477; --est: #f2932c; --off: #7c888f; --crit: #f0584e; --warn: #e3a93a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1418; --panel: #151f25; --panel-2: #1b262d; --ink: #e5ecee; --muted: #93a2aa; --line: #26343c;
+  --accent: #45b5ba; --accent-soft: #173a3d; --accent-ink: #06191a; --mark: #f2b705; --land: #10171b; --road: #2a363c; --road-case: #0a0f12; --park: #142519; --water: #10242d; --rail: #3d4a50; --border: #4a5a61; --label: #8a99a2; --route: #9aabb2;
+  --r1: #172433; --r2: #172a1d; --r3: #2c2416; --r4: #2a1c2d; --r5: #142a2c;
+  --ok: #39c477; --est: #f2932c; --off: #7c888f; --crit: #f0584e; --warn: #e3a93a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.45; }
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.num { font-variant-numeric: tabular-nums; }
+
+.app { height: 100%; display: grid; grid-template-rows: auto auto 1fr; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 12px; gap: 10px; }
+
+/* Header */
+.top { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand b { font-family: var(--display); font-size: 24px; font-weight: 700; letter-spacing: .01em; }
+.brand span { color: var(--muted); font-size: 13px; }
+.demo { font-family: var(--mono); font-size: 11px; color: var(--warn); border: 1px solid currentColor; border-radius: 4px; padding: 1px 6px; white-space: nowrap; }
+.tabs { display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 3px; overflow-x: auto; max-width: 100%; }
+.tab { border: 0; background: transparent; padding: 6px 12px; border-radius: 6px; white-space: nowrap; color: var(--muted); font-weight: 500; display: flex; gap: 6px; align-items: center; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); }
+.tab .badge { font-family: var(--mono); font-size: 11px; background: var(--crit); color: #fff; border-radius: 8px; padding: 0 6px; }
+.spacer { flex: 1; }
+.search { position: relative; min-width: 0; flex: 0 1 300px; }
+.search input { width: 100%; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 7px 10px 7px 32px; }
+.search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 14px; height: 14px; stroke: var(--muted); fill: none; }
+.search .hits { position: absolute; z-index: 30; top: calc(100% + 4px); left: 0; right: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; box-shadow: 0 12px 30px -12px rgba(0,0,0,.35); overflow: hidden; }
+.search .hits button { display: grid; grid-template-columns: 56px 1fr auto; gap: 8px; width: 100%; text-align: left; border: 0; background: transparent; padding: 8px 10px; border-top: 1px solid var(--line); }
+.search .hits button:first-child { border-top: 0; }
+.search .hits button:hover, .search .hits button:focus-visible { background: var(--panel-2); }
+.clock { font-family: var(--mono); color: var(--muted); font-size: 13px; }
+
+/* Region rail */
+.rail { display: flex; gap: 10px; align-items: stretch; overflow-x: auto; padding-bottom: 2px; }
+.region { flex: 0 0 auto; text-align: left; border: 1px solid var(--line); background: var(--panel); border-radius: 10px; padding: 8px 12px; display: grid; gap: 2px; min-width: 132px; position: relative; }
+.region .rn { font-family: var(--display); font-weight: 600; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.region .sw { width: 10px; height: 10px; border-radius: 3px; border: 1px solid var(--line); }
+.region .rs { font-size: 12px; color: var(--muted); display: flex; gap: 10px; }
+.region .rp { font-size: 11.5px; color: var(--muted); }
+.region .rs .c { color: var(--crit); font-weight: 600; }
+.region[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); background: var(--accent-soft); }
+.kpis { margin-left: auto; display: flex; gap: 18px; align-items: center; padding: 0 6px; flex: 0 0 auto; }
+.kpi { display: grid; }
+.kpi b { font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; display: flex; gap: 5px; align-items: center; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+
+/* Main */
+.main { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 10px; min-height: 0; }
+.stage { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 10px; min-height: 0; min-width: 0; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; min-width: 0; }
+.mapwrap { position: relative; overflow: hidden; min-height: 320px; }
+#map { width: 100%; height: 100%; display: block; background: var(--land); touch-action: none; cursor: grab; }
+#map.drag { cursor: grabbing; }
+#gmap { position: absolute; inset: 0; z-index: 0; }
+.lines, .legend, .maptools, .attr { z-index: 2; }
+.lines { position: absolute; left: 10px; top: 10px; width: min(340px, calc(100% - 64px)); max-height: calc(100% - 74px); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 28px -16px rgba(0,0,0,.45); overflow: hidden; }
+.lines-h { padding: 12px 14px 10px; display: grid; gap: 3px; border-bottom: 1px solid var(--line); }
+.lines-h b { font-family: var(--display); font-size: 20px; font-weight: 700; line-height: 1.1; }
+.lines-h span { color: var(--muted); font-size: 12.5px; }
+.lines-h .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.lines-h .chips button { border: 1px solid var(--line); background: var(--panel-2); border-radius: 999px; padding: 3px 10px; font-size: 12px; }
+.lines-h .chips button[aria-pressed="true"] { background: var(--mark); border-color: var(--mark); color: #1d1600; font-weight: 600; }
+.lines-h .clear { justify-self: start; border: 0; background: none; color: var(--accent); padding: 0; font-weight: 500; font-size: 12.5px; margin-top: 2px; }
+.lines-cols { display: grid; grid-template-columns: 64px minmax(0, 1fr) 44px; gap: 10px; padding: 6px 14px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); }
+.lines-list { overflow-y: auto; min-height: 0; }
+.lrow { display: grid; grid-template-columns: 64px minmax(0, 1fr) 44px; gap: 2px 10px; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: var(--panel); padding: 9px 14px; align-items: center; }
+.lrow:hover { background: var(--panel-2); }
+.lrow[aria-pressed="true"] { background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--mark); }
+.lrow .code { font-family: var(--mono); font-weight: 600; font-size: 14px; }
+.lrow .nm { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lrow .cnt { font-family: var(--display); font-size: 20px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.lrow .sub { grid-column: 2 / 4; display: flex; gap: 8px; align-items: center; font-size: 11.5px; color: var(--muted); }
+.lrow .dbar { flex: 1; height: 5px; border-radius: 3px; background: var(--panel-2); display: flex; overflow: hidden; max-width: 90px; }
+.lrow .dbar i { display: block; height: 100%; }
+.lrow .warn { color: var(--est); font-weight: 600; } .lrow .bad { color: var(--crit); font-weight: 600; }
+@media (max-width: 860px) { .lines { max-height: 46%; } }
+.gml { text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel), 0 0 2px var(--panel); white-space: nowrap; }
+.maptools { position: absolute; right: 10px; top: 10px; display: grid; gap: 4px; }
+.maptools button { width: 32px; height: 32px; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; font-size: 16px; font-weight: 600; }
+
+.mapbar { position: absolute; left: 10px; top: 10px; right: 56px; display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; pointer-events: none; }
+.mapbar > * { pointer-events: auto; }
+.where { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; display: grid; gap: 1px; box-shadow: 0 6px 18px -12px rgba(0,0,0,.4); }
+.where b { font-family: var(--display); font-size: 19px; font-weight: 700; line-height: 1.1; }
+.where span { font-size: 12.5px; color: var(--muted); }
+.wbtn { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; font-weight: 500; display: flex; gap: 8px; align-items: center; box-shadow: 0 6px 18px -12px rgba(0,0,0,.4); }
+.wbtn i { width: 14px; height: 4px; border-radius: 2px; background: var(--mark); }
+.wpop { position: absolute; top: calc(100% + 6px); left: 0; z-index: 20; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 6px; width: min(340px, 80vw); max-height: 340px; overflow-y: auto; box-shadow: 0 16px 40px -16px rgba(0,0,0,.45); }
+.wpop label { display: grid; grid-template-columns: 18px 64px 1fr; gap: 6px; align-items: center; padding: 6px 8px; border-radius: 6px; font-size: 13px; cursor: pointer; }
+.wpop label:hover { background: var(--panel-2); }
+.wpop h5 { margin: 8px 8px 2px; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.wpop label.g { grid-template-columns: 18px 1fr auto; }
+.wpop label.g small { display: block; color: var(--muted); font-size: 11.5px; }
+.wpop label.g em { font-style: normal; font-family: var(--mono); font-size: 12px; color: var(--ink); }
+.wpop label span:last-child { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wwrap { position: relative; }
+.legend { position: absolute; left: 10px; bottom: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 4px; display: flex; gap: 2px; flex-wrap: wrap; max-width: calc(100% - 20px); box-shadow: 0 6px 18px -12px rgba(0,0,0,.4); }
+.legend button { border: 0; background: transparent; border-radius: 7px; padding: 5px 9px; display: flex; gap: 7px; align-items: center; font-size: 12.5px; color: var(--ink); }
+.legend button[aria-pressed="false"] { color: var(--muted); }
+.legend button[aria-pressed="false"] .dot { opacity: .3; }
+.legend button:hover { background: var(--panel-2); }
+.legend b { font-variant-numeric: tabular-nums; font-weight: 600; }
+.legend .static { padding: 5px 9px; display: flex; gap: 7px; align-items: center; font-size: 12.5px; color: var(--muted); }
+
+
+/* Map marks */
+#map { --z: 1; }
+.b-water { fill: var(--water); stroke: none; }
+.b-park { fill: var(--park); stroke: none; }
+.b-case, .b-road, .b-sec, .b-rail, .b-sub, .b-dist { fill: none; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.b-sec { stroke: var(--road); stroke-width: calc(1px * var(--z)); }
+.b-case { stroke: var(--road-case); stroke-width: calc(3.4px * var(--z)); }
+.b-road { stroke: var(--road); stroke-width: calc(2px * var(--z)); }
+.b-case.m { stroke-width: calc(4.6px * var(--z)); } .b-road.m { stroke-width: calc(3px * var(--z)); }
+.b-rail { stroke: var(--rail); stroke-width: 1.2px; stroke-dasharray: 5 3; }
+.b-sub { stroke: var(--rail); stroke-width: 1.6px; }
+.b-dist { stroke: var(--border); stroke-width: 1.2px; stroke-dasharray: 2 4; }
+.dlabel { font-family: var(--display); font-weight: 600; letter-spacing: .14em; text-transform: uppercase; fill: var(--label); opacity: .8; pointer-events: none; }
+.lmark { font-family: var(--body); font-weight: 500; fill: var(--ink); opacity: .7; pointer-events: none; paint-order: stroke; stroke: var(--land); stroke-width: 3px; }
+.route { fill: none; stroke: var(--route); stroke-width: 2px; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; opacity: .0; }
+.route.watched { stroke: var(--mark); stroke-width: 4px; opacity: .95; }
+.route.sel { stroke: var(--accent); stroke-width: 5px; opacity: 1; }
+.stop { fill: var(--panel); stroke: var(--accent); vector-effect: non-scaling-stroke; stroke-width: 1.5; }
+.stop.next { fill: var(--mark); stroke: var(--ink); }
+.garage { fill: var(--ink); opacity: .75; }
+.garage.dim { opacity: .2; }
+.glabel { font-family: var(--body); font-weight: 600; fill: var(--ink); pointer-events: none; paint-order: stroke; stroke: var(--land); stroke-width: 3px; }
+.glabel tspan.s { font-weight: 400; fill: var(--muted); }
+.b-runway { fill: none; stroke: var(--road-case); stroke-width: calc(5px * var(--z)); vector-effect: non-scaling-stroke; stroke-linecap: butt; }
+.wring { fill: none; stroke: var(--mark); stroke-width: 2.6; vector-effect: non-scaling-stroke; pointer-events: none; }
+.bus { stroke: var(--panel); vector-effect: non-scaling-stroke; stroke-width: 1.2; cursor: pointer; }
+.bus.ok { fill: var(--ok); } .bus.est { fill: var(--est); } .bus.off { fill: var(--off); } .bus.gar { fill: var(--off); }
+.bus.dim { opacity: .1; pointer-events: none; }
+.bus.hide { display: none; }
+.ring { fill: none; stroke: var(--crit); stroke-width: 2.4; vector-effect: non-scaling-stroke; pointer-events: none; }
+.ring.high { stroke: var(--est); stroke-width: 1.8; animation: none; }
+.selring { fill: none; stroke: var(--ink); stroke-width: 3; vector-effect: non-scaling-stroke; pointer-events: none; }
+.sellabel { font-family: var(--display); font-weight: 700; fill: var(--ink); paint-order: stroke; stroke: var(--panel); stroke-width: 4px; pointer-events: none; }
+.gpsdot { fill: var(--crit); stroke: var(--panel); vector-effect: non-scaling-stroke; stroke-width: 1.2; cursor: pointer; }
+.gpspath { fill: none; stroke: var(--crit); stroke-width: 2.4; stroke-dasharray: 5 4; vector-effect: non-scaling-stroke; opacity: .85; }
+.gpsend { fill: var(--panel); stroke: var(--crit); stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+.spoof { stroke: #8a3ffc; stroke-width: 2.2; vector-effect: non-scaling-stroke; fill: none; stroke-dasharray: 6 3; }
+.spoofend { fill: #8a3ffc; }
+.hot { fill: var(--crit); opacity: .13; pointer-events: none; }
+@keyframes pulse { 0% { opacity: 1 } 100% { opacity: .25 } }
+.ring { animation: pulse 1.2s ease-in-out infinite alternate; }
+@media (prefers-reduced-motion: reduce) { .ring { animation: none; } }
+.attr { position: absolute; right: 8px; bottom: 6px; font-size: 10.5px; color: var(--muted); background: color-mix(in srgb, var(--panel) 80%, transparent); padding: 1px 6px; border-radius: 4px; }
+
+/* Side panel */
+.side { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.side-scroll { overflow-y: auto; min-height: 0; flex: 1; }
+.sec { padding: 14px 16px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.sec:first-child { border-top: 0; }
+.sec h3 { margin: 0; font-family: var(--display); font-size: 16px; font-weight: 600; letter-spacing: .01em; display: flex; justify-content: space-between; align-items: baseline; }
+.sec h3 small { font-family: var(--body); font-size: 12px; color: var(--muted); font-weight: 400; }
+.alert { display: grid; grid-template-columns: 4px 1fr; gap: 10px; text-align: left; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 9px 10px 9px 0; width: 100%; }
+.alert:hover { background: var(--panel-2); }
+.alert .bar { border-radius: 0 3px 3px 0; }
+.alert .t { font-weight: 600; display: flex; justify-content: space-between; gap: 8px; }
+.alert .t time { font-family: var(--mono); font-size: 11px; color: var(--muted); font-weight: 400; white-space: nowrap; }
+.alert .m { font-size: 12px; color: var(--muted); }
+.alert.compact .m { display: none; }
+.alert .who { font-family: var(--mono); font-size: 12px; }
+.sev-crit { background: var(--crit); } .sev-high { background: var(--est); } .sev-med { background: var(--warn); } .sev-low { background: var(--off); }
+.pill { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 2px 9px; border: 1px solid currentColor; white-space: nowrap; }
+.pill.ok { color: var(--ok); } .pill.est { color: var(--est); } .pill.off { color: var(--off); } .pill.crit { color: var(--crit); } .pill.warn { color: var(--warn); }
+.wl { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.wlh { display: flex; gap: 8px; align-items: center; padding: 8px 10px; background: var(--panel-2); border-left: 4px solid var(--mark); font-size: 12.5px; }
+.wlh span { flex: 1; min-width: 0; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wlh b { font-size: 14px; }
+.wx { border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 1px 8px; font-size: 12px; color: var(--muted); }
+.wrows { display: grid; }
+.wrow { display: grid; grid-template-columns: 46px minmax(0, 1fr) auto auto; gap: 8px; align-items: center; text-align: left; border: 0; border-top: 1px solid var(--line); background: var(--panel); padding: 7px 10px; font-size: 12.5px; }
+.wrow:hover { background: var(--panel-2); }
+.wrow.on { background: var(--accent-soft); }
+.wrow .nx { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.wrow .sp { color: var(--muted); font-size: 12px; }
+.wrow .pill { font-size: 11px; padding: 1px 7px; }
+.wmore { padding: 6px 10px; font-size: 12px; color: var(--muted); border-top: 1px solid var(--line); }
+.feed { display: grid; gap: 6px; font-size: 12.5px; }
+.feed div { display: grid; grid-template-columns: 58px 1fr; gap: 8px; }
+.feed time { font-family: var(--mono); color: var(--muted); font-size: 11.5px; }
+
+/* Vehicle detail */
+.vhead { padding: 14px 16px 12px; display: grid; gap: 8px; border-bottom: 1px solid var(--line); }
+.back { justify-self: start; border: 0; background: none; color: var(--accent); padding: 0; font-weight: 500; }
+.vtitle { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.vtitle b { font-family: var(--display); font-size: 34px; line-height: 1; font-weight: 700; }
+.vtitle .plate { font-family: var(--mono); font-size: 14px; border: 1.5px solid var(--ink); border-radius: 4px; padding: 1px 7px; }
+.vtitle .type { font-size: 12px; color: var(--muted); }
+.kv { display: grid; grid-template-columns: 112px 1fr; gap: 5px 10px; font-size: 13px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.ipbox { display: flex; align-items: center; gap: 8px; background: var(--panel-2); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+.ipbox .ip { font-family: var(--mono); font-size: 15px; font-weight: 500; }
+.ipbox small { color: var(--muted); font-size: 11.5px; display: block; }
+.ipbox button { margin-left: auto; border: 1px solid var(--line); background: var(--panel); border-radius: 6px; padding: 3px 8px; font-size: 12px; }
+.shot { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); }
+.shot img { display: block; width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; }
+.shot span { position: absolute; left: 6px; bottom: 6px; background: rgba(0,0,0,.65); color: #fff; font-family: var(--mono); font-size: 11px; padding: 1px 6px; border-radius: 4px; }
+.health { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.hcell { border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; display: grid; gap: 1px; }
+.hcell small { color: var(--muted); font-size: 11.5px; }
+.hcell b { font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.timeline { display: grid; gap: 7px; font-size: 12.5px; }
+.timeline div { display: grid; grid-template-columns: 44px 10px 1fr; gap: 8px; align-items: start; }
+.timeline time { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+.timeline i { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; }
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 8px 10px; font-weight: 500; text-align: left; font-size: 13px; }
+.btn:hover:not(:disabled) { border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
+.btn.primary small { color: inherit; opacity: .8; }
+
+/* Views */
+.view { overflow: auto; min-height: 0; }
+.viewhead { padding: 14px 16px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel); z-index: 2; }
+.viewhead h2 { margin: 0 12px 0 0; font-family: var(--display); font-size: 20px; font-weight: 600; }
+.viewhead select, .viewhead input { border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 5px 8px; }
+.viewhead .count { color: var(--muted); font-size: 13px; margin-left: auto; }
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; background: var(--panel); }
+td { padding: 8px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+tbody tr { cursor: pointer; }
+tbody tr:hover { background: var(--panel-2); }
+tbody tr.on { background: var(--accent-soft); }
+.more { display: block; margin: 12px auto 16px; }
+.gpsbottom { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0; max-height: 300px; min-height: 0; }
+.gpsbottom .tablewrap { overflow: auto; border-right: 1px solid var(--line); }
+.subtabs { display: flex; gap: 4px; }
+.subtabs button { border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 4px 10px; font-size: 13px; }
+.subtabs button[aria-selected="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); }
+.insight { padding: 12px 14px; display: grid; gap: 10px; overflow-y: auto; align-content: start; }
+.insight h4 { margin: 0; font-family: var(--display); font-size: 15px; font-weight: 600; }
+.insight p { margin: 0; font-size: 12.5px; color: var(--muted); }
+.irow { display: grid; grid-template-columns: 1fr auto; gap: 6px; font-size: 12.5px; padding: 6px 0; border-top: 1px solid var(--line); text-align: left; border-left: 0; border-right: 0; border-bottom: 0; background: none; width: 100%; }
+.irow b { font-family: var(--mono); font-weight: 500; }
+
+/* Updates */
+.upd { padding: 16px; display: grid; gap: 16px; }
+.stages { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.stage-c { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; }
+.stage-c.done { border-color: var(--ok); }
+.stage-c.run { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.stage-c b { font-family: var(--display); font-size: 17px; font-weight: 600; }
+.stage-c small { color: var(--muted); }
+.prog { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--accent); }
+.stage-c.done .prog i { background: var(--ok); }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
+.box { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 10px; align-content: start; }
+.box h4 { margin: 0; font-family: var(--display); font-size: 16px; font-weight: 600; }
+.vbar { display: grid; grid-template-columns: 110px 1fr 54px; gap: 8px; align-items: center; font-size: 12.5px; }
+.vbar .track { height: 10px; background: var(--panel-2); border-radius: 3px; overflow: hidden; display: flex; }
+.vbar .track i { display: block; height: 100%; }
+.rules { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13px; }
+.metric { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-top: 1px solid var(--line); }
+.metric:first-of-type { border-top: 0; }
+
+.toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--panel); padding: 9px 14px; border-radius: 8px; font-size: 13px; z-index: 50; box-shadow: 0 10px 30px -10px rgba(0,0,0,.5); max-width: calc(100% - 32px); }
+
+@media (max-width: 1100px) {
+  .main { grid-template-columns: minmax(0, 1fr) 330px; }
+  .kpis { display: none; }
+}
+@media (max-width: 860px) {
+  html, body { height: auto; }
+  .app { height: auto; }
+  .main { grid-template-columns: minmax(0, 1fr); }
+  .mapwrap { height: 58vh; }
+  .side { max-height: none; }
+  .gpsbottom { grid-template-columns: minmax(0, 1fr); max-height: none; }
+  .gpsbottom .tablewrap { max-height: 280px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .stages { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .search { flex: 1 1 100%; order: 5; }
+}
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand"><b>Filo Konsolu</b><span>Ankara · 5 bölge</span></div>
+    <span class="demo" title="Hat çizgileri ve duraklar gerçek KML verisinden; araçlar, olaylar ve uyarılar örnektir.">Sunum prototipi · örnek veri</span>
+    <nav class="tabs" role="tablist" aria-label="Görünümler">
+      <button class="tab" role="tab" data-view="harita" aria-selected="true">Canlı harita</button>
+      <button class="tab" role="tab" data-view="araclar" aria-selected="false">Araçlar</button>
+      <button class="tab" role="tab" data-view="gps" aria-selected="false">GPS raporu</button>
+      <button class="tab" role="tab" data-view="uyarilar" aria-selected="false">Uyarılar <span class="badge" id="alertBadge">0</span></button>
+      <button class="tab" role="tab" data-view="guncelleme" aria-selected="false">Güncellemeler</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="search">
+      <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke-width="1.6"/><path d="M11 11l3.5 3.5" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input id="q" type="search" placeholder="Kapı no, plaka ya da SIM IP" autocomplete="off" aria-label="Araç ara">
+      <div class="hits" id="hits" hidden></div>
+    </div>
+    <span class="clock" id="clock">--:--:--</span>
+  </header>
+
+  <section class="rail" id="rail" aria-label="Bölgeler"></section>
+
+  <section class="main">
+    <div class="stage">
+      <div class="card mapwrap" id="mapwrap">
+        <svg id="map" role="img" aria-label="Ankara filo haritası"></svg>
+        <div id="gmap" hidden></div>
+        <div class="lines" id="lines"></div>
+        <span class="attr">© OpenStreetMap katkıcıları</span>
+        <div class="maptools">
+          <button type="button" id="zin" aria-label="Yakınlaştır">+</button>
+          <button type="button" id="zout" aria-label="Uzaklaştır">−</button>
+          <button type="button" id="zreset" aria-label="Tümünü göster">⤢</button>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="card view" id="view" hidden></div>
+      <div class="card gpsbottom" id="gpsbottom" hidden></div>
+    </div>
+    <aside class="card side" id="side" aria-live="polite"></aside>
+  </section>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+// Google Maps JavaScript API anahtarı. Boşsa OpenStreetMap haritası kullanılır.
+// Anahtar Google Cloud'da yalnız bu sitenin adresine (HTTP referrer) kilitli olmalı.
+window.MAPS_KEY = window.MAPS_KEY || "";
+</script>
+<script type="application/json" id="routes-data">/*ROUTES*/</script>
+<script type="application/json" id="base-data">/*BASEMAP*/</script>
+<script>
+(function () {
+"use strict";
+const ROUTES = JSON.parse(document.getElementById("routes-data").textContent);
+const BASE = JSON.parse(document.getElementById("base-data").textContent);
+const SHOTS = { route: "scr-route.jpg", arrival: "scr-arrival.jpg", waiting: "scr-waiting.jpg" };
+const NS = "http://www.w3.org/2000/svg";
+const $ = (s, r) => (r || document).querySelector(s);
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const fmt = n => n.toLocaleString("tr-TR");
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- Geometry ---------- */
+const C = { lat: 39.9208, lon: 32.8541 };           // Kızılay
+const KX = Math.cos(39.92 * Math.PI / 180);
+const B = { minLat: 39.74, maxLat: 40.15, minLon: 32.48, maxLon: 33.10 };
+const S = 1000 / ((B.maxLon - B.minLon) * KX);
+const W = 1000, H = (B.maxLat - B.minLat) * S;
+const P = (lat, lon) => [(lon - B.minLon) * KX * S, (B.maxLat - lat) * S];
+const UNP = (x, y) => [B.maxLat - y / S, B.minLon + x / (KX * S)];
+function hav(a, b) { const R = 6371000, r = Math.PI / 180; const dLa = (b[0] - a[0]) * r, dLo = (b[1] - a[1]) * r; const h = Math.sin(dLa / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
+
+/* ---------- Seeded example data ---------- */
+let seed = 20261111;
+const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const pick = a => a[Math.floor(rnd() * a.length)];
+const shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+
+/* EGO Otobüs İşletme Dairesi: 5 bölge şube müdürlüğü (ego.gov.tr birim sayfaları).
+   Hat numarasının ilk hanesi bölgeyi gösterir. Garaj konumları adreslerden yaklaşık işaretlendi. */
+const REGIONS = [
+  { n: 1, name: "1. Bölge", place: "Gölbaşı Karaoğlan", area: "Çankaya güneyi, Gölbaşı", garage: [39.806, 32.814],
+    anchors: [[39.7925, 32.8067], [39.850, 32.830], [39.8798, 32.8386], [39.9134, 32.7860], [39.8700, 32.7490], [39.9205, 32.8540], [39.8950, 32.8600]],
+    codes: ["107-6", "110", "111", "113", "130", "132", "134", "136", "155-6", "167", "171", "174", "175", "176", "183-6", "185-6"] },
+  { n: 2, name: "2. Bölge", place: "Macunköy", area: "Yenimahalle, Keçiören batısı", garage: [39.9762, 32.7690],
+    anchors: [[39.9700, 32.7169], [39.9719, 32.7666], [39.9680, 32.7450], [39.9620, 32.7850], [40.0097, 32.8320], [40.0006, 32.8078], [40.0489, 32.8424], [39.9580, 32.8000], [39.9392, 32.8507]],
+    codes: ["201-6", "202", "204", "205", "206", "207", "208", "209", "210", "211", "213", "214", "215", "216", "217", "222", "226", "227", "232", "233", "234", "236", "237", "238", "240", "241", "242", "243", "250", "254", "255", "259", "264", "268", "270", "271", "274", "275", "276", "283", "287", "289", "290", "291", "292", "293", "294", "295", "296", "297", "298", "299"] },
+  { n: 3, name: "3. Bölge", place: "Mamak Zirvekent", area: "Mamak, Altındağ doğusu, Ulus", garage: [39.8537, 32.9659],
+    anchors: [[39.9392, 32.8507], [39.9330, 32.9082], [39.9009, 32.9170], [39.9070, 32.9037], [39.9148, 32.9668], [39.9664, 32.9688], [39.9734, 32.9107], [39.9310, 32.8790], [39.8537, 32.9659]],
+    codes: ["306", "308", "318-6", "321-6", "328", "334-6", "341-6", "346", "355-6", "360", "364", "374", "385"] },
+  { n: 4, name: "4. Bölge", place: "Altındağ Akköprü", area: "Keçiören, Altındağ, Pursaklar, Akyurt", garage: [39.9500, 32.8405],
+    anchors: [[39.9999, 32.8892], [40.0073, 32.8668], [39.9798, 32.9078], [40.0381, 32.8969], [39.9516, 32.8342], [39.9555, 32.8587], [39.9777, 32.8670], [40.0832, 32.9900]],
+    codes: ["401", "403-6", "405-1", "409", "412", "414", "415-6", "416", "418-1", "430", "431", "437-1", "438-1", "439-6", "440-1", "441-1", "443-1", "446-1", "449", "454-6", "455", "456-1", "460", "461", "468-1", "472-1", "480", "481-6", "482-6", "483", "485-1", "486-6", "487-1", "488-1", "492-1", "493-1", "494-1", "495"] },
+  { n: 5, name: "5. Bölge", place: "Sincan Gökçek", area: "Etimesgut, Sincan, Kazan, Koru, Ümitköy", garage: [39.9820, 32.5850],
+    anchors: [[39.9655, 32.5794], [39.9489, 32.6621], [39.9723, 32.6213], [39.9572, 32.6155], [40.0039, 32.5245], [39.8868, 32.6863], [39.8935, 32.7026], [39.8564, 32.7405], [39.8813, 32.6838]],
+    codes: ["504-6", "507", "510-6", "511", "512", "517", "521", "522", "523-6", "524", "525-6", "532", "534", "537", "538", "539", "540-6", "541", "545", "551", "552", "553", "558", "559", "562", "566", "567", "568", "570", "572", "573", "575", "576", "580", "581", "582", "583", "584", "586", "587", "588", "589", "590", "591", "592", "593", "594", "595", "596", "597", "598", "602-6", "606", "607", "611-1", "612-1", "632-1", "641-1"] },
+];
+const regionOfCode = code => { const d = +String(code)[0]; return d >= 1 && d <= 5 ? d : d === 6 ? 5 : 1; };
+// Hatlar için özel izleme grupları (ego.gov.tr sayfalarından)
+const GROUPS = [
+  { id: "air", name: "Esenboğa Havalimanı", note: "442 · AŞTİ – Kızılay – Havalimanı", codes: ["442"] },
+  { id: "city", name: "Şehir hastaneleri", note: "Bilkent Şehir (113, 522) · Etlik Şehir (206, 409)", codes: ["113", "522", "206", "409"] },
+  { id: "night", name: "Gece hatları", note: "29 hat · 00:00–05:00", codes: ["107-6", "155-6", "183-6", "185-6", "201-6", "253-6", "261-6", "266-6", "279-6", "284-6", "288-6", "318-6", "321-6", "334-6", "341-6", "355-6", "403-6", "415-6", "439-6", "454-6", "481-6", "482-6", "486-6", "504-6", "510-6", "523-6", "525-6", "540-6", "602-6"] },
+];
+REGIONS[3].codes.push("442");
+// gece hatları gündüz çalışmaz: gündüz örnek araçlara verilmez
+REGIONS.forEach(R => { R.codes = R.codes.filter(c => !GROUPS[2].codes.includes(c)); });
+const AIR_PATH = [[39.9182, 32.8144], [39.9205, 32.8540], [39.9555, 32.8587], [39.9900, 32.8800], [40.0300, 32.9200], [40.0700, 32.9600], [40.1050, 32.9900], [40.1232, 33.0015]];
+
+ROUTES.forEach(r => {
+  r.cum = [0];
+  for (let i = 1; i < r.pts.length; i++) r.cum.push(r.cum[i - 1] + hav(r.pts[i - 1], r.pts[i]));
+  r.len = r.cum[r.cum.length - 1];
+  r.region = regionOfCode(r.code);
+  r.stopT = r.stops.map(s => { let bi = 0, bd = 1e9; r.pts.forEach((p, i) => { const d = (p[0] - s[1]) ** 2 + (p[1] - s[2]) ** 2; if (d < bd) { bd = d; bi = i; } }); return r.cum[bi] / r.len; });
+});
+const routeByCode = Object.fromEntries(ROUTES.map(r => [r.code, r]));
+function posOnRoute(r, t) {
+  const d = Math.max(0, Math.min(1, t)) * r.len; let i = 1;
+  while (i < r.cum.length - 1 && r.cum[i] < d) i++;
+  const a = r.pts[i - 1], b = r.pts[i], seg = r.cum[i] - r.cum[i - 1] || 1, f = (d - r.cum[i - 1]) / seg;
+  return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
+}
+
+// Hat adları: ego.gov.tr ring ve gece hatları sayfaları (11.11.2026)
+const NAMES = {
+  "107-6": "Ulus - Gölbaşı Toki - Gölbaşı", "110": "Bilkent Metro - Bilkent - Beytepe Mah.", "113": "Tarım Bakanlığı Metro - Ankara Şehir Hastanesi", "130": "Beytepe Metro - Hacettepe Kampüsü", "132": "Söğütözü Metro - Çukurambar Yüzüncü Yıl", "134": "Söğütözü Metro - Çukurambar - Çiğdem Mah.", "136": "Söğütözü Metro - 100. Yıl - Çiğdem Mah.", "167": "MTA - Emsan Sit. - Söğütözü Cad.", "171": "Bilkent Metro - M. Kemal Mah.", "174": "Beytepe Metro - Beysukent Angora Evleri", "175": "Bilkent Metro - Beytepe Mah.", "176": "Bilkent Metro - Bilkent Üniversitesi",
+  "202": "İvedik Metro - Yenimahalle", "204": "İncirli - Meteoroloji Metro", "205": "İvedik Metro - Anadolu Mah. - Yükseltepe", "206": "İvedik Metro - Etlik Şehir Hastanesi", "207": "İvedik Metro - Kardeşler", "208": "İvedik Metro - Kardeşler - Kurtini", "209": "Hastane Metro - Urankent", "210": "Hastane Metro - Karşıyaka Mezarlık", "211": "Hastane Metro - Çamlıca Mah. - Timko", "213": "Hastane Metro - Şentepe - Yükseltepe", "214": "Macunköy Metro - Serhat Sitesi", "215": "Hastane Metro - Yakacık", "216": "Macunköy Metro - Mehmet Akif Ersoy Cad.", "217": "Hastane Metro - Yuva Karacakaya", "222": "İncirli - Sakız Ağacı Cad. - Meteoroloji Metro", "226": "Hastane Metro - Memlik - Villa", "227": "Hastane Metro - Kuzeyyıldızı Mah.", "232": "Batıkent Metro - Botanik Metro - Mebuskent", "233": "Batıkent - Anadolu Bulvarı - Eskişehir Yolu", "234": "Ostim Metro - İvedik OSB", "236": "Ostim Metro - Batıkent - Şaşmaz - Ümitköy Metro", "237": "Ostim Metro - Uzayçağı Cad. - İvedik OSB", "238": "Ostim Metro - Atisan Sanayi Sitesi", "240": "Batıkent Metro - Çeşme", "241": "Batıkent Metro - Çakırlar - Yuvaköy", "242": "Demetevler Metro - 25 Mart Mah.", "243": "Ergazi KYK - Mesa Metro", "250": "Macunköy Metro - Gimat - Erciyes", "254": "Atapark - Kuşcağız - Meteoroloji Metro", "255": "Atapark - 23 Nisan Mah. - Kuyubaşı Metro", "259": "Atış Cad. - Meteoroloji Metro", "264": "Bağlum - Ufuktepe - Şehitler Metro", "268": "Bağlum - Meteoroloji Metro", "270": "Ufuktepe - Meteoroloji Metro", "271": "Yenimahalle Metro - Şentepe", "274": "Hastane Metro - Karşıyaka - Kayalar", "275": "Hastane Metro - Karşıyaka - Şentepe", "276": "Batıkent Metro - Çakırlar Çiftliği", "283": "Ovacık - Atapark - Şehitler Metro", "287": "Batıkent Metro - Mesutevler", "289": "Ovacık - Piyangotepe - İncirli - Meteoroloji Metro", "290": "Batıkent Metro - Mesa - Modernkent", "291": "Ostim Metro - Jandarma", "292": "Batıkent Metro - İnönü Mah.", "293": "Ostim Metro - Uğur Mumcu Mah. - Jandarma", "294": "Batıkent Metro - Ergazi - İnönü Mah.", "295": "Batıkent Metro - Modernkent - Kardelen", "296": "Batıkent Metro - Ergazi Mah.", "297": "Ostim Metro - Uğur Mumcu", "298": "Batıkent Metro - Yeni Batı Mah.", "299": "Batıkent Metro - İlkyerleşim",
+  "306": "Karapürçek - Beşikkaya - Ankara Hastanesi", "308": "Karapürçek - Cebeci - Dikimevi", "328": "Diriliş - Altınevler - Plevne Cad. - Dikimevi", "346": "Ege Mah. - Dikimevi", "360": "Mutlu Cad. - Okullar Cad. - Dikimevi", "364": "Zirvekent - Ege Mah. - Natoyolu - Dikimevi", "374": "Zerdalitepe - Mamak - Dikimevi", "385": "Peyamisafa - Dikimevi",
+  "401": "AKM Metro - Kazım Karabekir Cad. - Ulus", "405-1": "Aktepe - Dışkapı Metro", "409": "Dışkapı - Etlik Şehir Hastanesi - Akköprü", "412": "Aktepe - Özyurt Cad. - Dutluk Metro", "414": "Aktepe - İvedik Metro", "416": "Aktepe - Kamil Ocak Mah. - Mecidiye Metro", "418-1": "Aktepe - Bursa Cd. - Dışkapı Metro", "430": "Akköprü Metro - Varlık Mah.", "431": "Akköprü Metro - İskitler", "437-1": "Pursaklar - Mimar Sinan Mah. - Dışkapı Metro", "438-1": "Pursaklar - Bağlum - Dışkapı Metro", "440-1": "Pursaklar - Merkez Mah. - Dışkapı Metro", "441-1": "Pursaklar - Karacaören - TOKİ - Dışkapı Metro", "442": "AŞTİ - 15 Temmuz Kızılay Milli İrade Meydanı - Havalimanı", "443-1": "Vakıf Mh. - TOKİ - Dışkapı Metro", "446-1": "Solfasol - Dışkapı Metro", "449": "Akköprü - Millet Kütüphanesi - Çiftlik Kavşağı", "455": "Örnek - Çalışkanlar - Cebeci - Dikimevi", "456-1": "Örnek - Çalışkanlar - Dışkapı Metro", "460": "Uyanış - Pınarbaşı - Şehitler Metro", "461": "Uyanış - Asfalt - Belediye Metro", "468-1": "Akyurt - Kızık Mh. - Dışkapı Metro", "472-1": "AYBÜ - Saray - Dışkapı Metro", "480": "Uyanış - İvedik Metro", "483": "Uyanış - Hacıkadın - Dutluk Metro", "485-1": "Güzelhisar - Altınova - Dışkapı Metro", "487-1": "Çubuk - Dışkapı Metro", "488-1": "Akyurt - Altınova - Dışkapı Metro", "492-1": "Kuzeykent 10. Etap - Ulus - Dışkapı Metro", "493-1": "Kuzeykent - Selçukbey Cd. - Dışkapı Metro", "494-1": "Kuzeykent 16. Etap - Hasköy - Dışkapı Metro", "495": "Aktepe - Kuyubaşı Metro - Dutluk",
+  "507": "Plevne Mah. - Ümitköy Metro", "511": "Sincan - Ümitköy Metro", "512": "Sincan - Ahi Mesud Bulvarı - Koru Metro", "517": "Fatih - Ümitköy Metro", "521": "Fatih (GOP) - Ümitköy Metro", "522": "Koru Metro - Ümitköy Metro - Bilkent Şehir Hastanesi", "524": "Sincan - Polatlı 2. Cadde - Ümitköy Metro", "532": "Elvankent - Ümitköy Metro", "534": "Ahi Mesut Mah. - Koru Metro", "537": "Topçu Mah. - Koru Metro", "538": "Etimesgut - Hikmet Özer Cad. - Ümitköy Metro", "539": "Devlet Mah. Metro - Atakent - Ayyıldız", "541": "Eryaman - Ümitköy Metro", "545": "Eryaman - Güzelkent - Ümitköy Metro", "551": "Sincan Merkez - Eryaman 1-2 Metro", "552": "Elvankent - Eryaman 1-2 Metro", "553": "Etimesgut - Eryaman 1-2 Metro", "558": "İstanbul Yolu Metro - Yeni Batı Mah.", "559": "Koru Metro - Beyler Cad. - Orhan Gazi Bulvarı", "562": "Koru Metro - Bağlıca Mah.", "566": "Sincan - Ahi Mesud Bulvarı - Koru Metro", "567": "Ayyıldız - Ahi Mesud - Koru Metro", "568": "Koru Metro - Bağlıca Bulvarı", "570": "Ümitköy Metro - Ümitköy", "572": "Yenikent - OSB - Törekent Metro", "573": "Yenikent - Ümitköy Metro", "575": "Lalekent - Göksu - Eryaman 1-2 Metro", "576": "Koru Metro - Venüskent - Yaşamkent", "580": "Susuz Mah. - Göksu Mah. - Eryaman 1-2 Metro", "581": "Koru Metro - Organize Sanayi Bölgesi", "582": "Koru Metro - Şehitali Mah.", "583": "Koru Metro - Ballıkuyumcu", "584": "Koru Metro - İncek - Beytepe Devlet Hastanesi", "586": "Koru Metro - Oyak 4 - Alacaatlı", "587": "Koru Metro - Bağlıca Mah. (1. Etap)", "588": "Koru Metro - Yapracık TOKİ", "589": "Koru Metro - Turkuaz Mah.", "590": "Koru Metro - Yaşamkent", "591": "Koru Metro - Temelli", "592": "Koru Metro - Yıldız 88", "593": "Koru Metro - Konutkent - Beyler Cad.", "594": "Koru Metro - Yapracık 1. Bölge", "595": "Koru Metro - Yapracık 2. Bölge", "596": "Koru Metro - Koza Evleri - Türkkonut", "597": "Koru Metro - Bağlıca Mah. (2. Etap)", "598": "Koru Metro - Türkkonut", "606": "OSB Törekent Metro - Yenikent Stadyumu", "607": "Koru Metro - Yargıtay", "611-1": "Sincan - Saraycık TOKİ - Bilkent Metro", "612-1": "Çimşit - Bilkent Metro", "632-1": "Saraycık TOKİ - Elvankent - Bilkent Metro", "641-1": "Eryaman - Bilkent Metro",
+};
+const lineName = code => (routeByCode[code] && routeByCode[code].name) || NAMES[code] || "";
+
+// Road vertices from the basemap, so vehicles without a KML line still sit on a real road
+const ROADPTS = [];
+BASE.primary.concat(BASE.secondary, BASE.trunk).forEach(t => t.split(" ").forEach(q => { const [x, y] = q.split(",").map(Number); ROADPTS.push([x, y]); }));
+const KM = S / 111.32;                                  // map units per km
+function roadNear(lat, lon, km) {
+  const [cx, cy] = P(lat, lon), r2 = (km * KM) ** 2;
+  for (let tries = 0; tries < 400; tries++) { const p = ROADPTS[Math.floor(rnd() * ROADPTS.length)]; if ((p[0] - cx) ** 2 + (p[1] - cy) ** 2 < r2) return UNP(p[0], p[1]); }
+  return [lat, lon];
+}
+REGIONS.forEach(R => {
+  R.kml = ROUTES.filter(r => r.region === R.n).map(r => r.code);
+  R.pool = [];                                            // candidate road points around the region's departure points
+  R.anchors.forEach(a => { const [cx, cy] = P(a[0], a[1]), r2 = (2.6 * KM) ** 2; ROADPTS.forEach(p => { if ((p[0] - cx) ** 2 + (p[1] - cy) ** 2 < r2) R.pool.push(p); }); });
+});
+const AIR_POOL = []; AIR_PATH.forEach(a => { const [cx, cy] = P(a[0], a[1]), r2 = (1.2 * KM) ** 2; ROADPTS.forEach(p => { if ((p[0] - cx) ** 2 + (p[1] - cy) ** 2 < r2) AIR_POOL.push(p); }); });
+
+const TOTAL = 2032, ARTIC = 633, KARSAN = 51;
+const SHARE = [380, 470, 360, 380, 442];
+const types = shuffle([].concat(Array(ARTIC).fill("K"), Array(KARSAN).fill("A"), Array(TOTAL - ARTIC - KARSAN).fill("S")));
+const LET = ["EA", "EB", "EC", "ED", "EF", "EG", "EH", "EK", "EL", "EM"];
+const usedPlates = new Set();
+const V = [];
+let idx = 0;
+REGIONS.forEach((R, ri) => {
+  const nums = shuffle(Array.from({ length: 998 }, (_, i) => R.n * 1000 + i + 1)).slice(0, SHARE[ri]);
+  nums.sort((a, b) => a - b);
+  nums.forEach((kapi, k) => {
+    let plate; do { plate = "06 " + pick(LET) + " " + (100 + Math.floor(rnd() * 9800)); } while (usedPlates.has(plate)); usedPlates.add(plate);
+    const type = types[idx++];
+    const u = rnd();
+    const status = u < 0.73 ? "hatta" : u < 0.93 ? "garajda" : u < 0.975 ? "cevrimdisi" : "bakim";
+    const v = { dir: rnd() < 0.5 ? "gidis" : "donus", kapi, plate, type, region: R.n, ip: "10." + (20 + R.n) + "." + Math.floor(k / 250) + "." + (k % 250 + 2), status, route: null, code: null, t: 0, speed: 0, src: "gps", lat: 0, lon: 0, issues: [], lastSeen: 0 };
+    if (status === "hatta" || status === "cevrimdisi") {
+      if (R.kml.length && rnd() < 0.22) { v.route = routeByCode[pick(R.kml)]; v.code = v.route.code; v.t = rnd(); [v.lat, v.lon] = posOnRoute(v.route, v.t); }
+      else {
+        v.code = pick(R.codes);
+        const pool = v.code === "442" ? AIR_POOL : R.pool;
+        const p = pool.length ? pick(pool) : P(R.anchors[0][0], R.anchors[0][1]);
+        [v.lat, v.lon] = UNP(p[0], p[1]);
+      }
+      v.speed = status === "hatta" ? (rnd() < 0.22 ? 0 : 12 + Math.floor(rnd() * 38)) : 0;
+      if (status === "hatta" && rnd() < 0.045) v.src = "est";
+      v.lastSeen = status === "cevrimdisi" ? 6 + Math.floor(rnd() * 140) : 0;
+    } else {
+      const g = R.garage; v.lat = g[0] + (rnd() - .5) * 0.004; v.lon = g[1] + (rnd() - .5) * 0.006;
+      v.lastSeen = status === "bakim" ? 60 + Math.floor(rnd() * 600) : 0;
+    }
+    V.push(v);
+  });
+});
+// a few more vehicles on the airport line so the group is visible
+V.filter(v => v.region === 4 && v.status === "hatta" && !v.route).slice(0, 9).forEach(v => { v.code = "442"; const p = pick(AIR_POOL); [v.lat, v.lon] = UNP(p[0], p[1]); });
+// rollout: 492 vehicles on 1.4.1 regardless of region
+shuffle(V.slice()).forEach((v, i) => { v.panel = i < 492 ? "1.4.1" : i < 492 + 1380 ? "1.4.0" : "1.3.2"; });
+const byKapi = Object.fromEntries(V.map(v => [v.kapi, v]));
+
+// Crafted vehicles for the scenarios
+function craft(kapi, region, code, set) {
+  let v = byKapi[kapi];
+  if (!v) { v = V.find(x => x.region === region && x.status === "hatta" && !x.crafted); delete byKapi[v.kapi]; v.kapi = kapi; byKapi[kapi] = v; }
+  v.region = region; v.crafted = true; Object.assign(v, set || {});
+  v.route = routeByCode[code]; v.code = code; v.t = .2 + rnd() * .5; [v.lat, v.lon] = posOnRoute(v.route, v.t);
+  return v;
+}
+const v5317 = craft(5317, 5, "505", { status: "hatta", type: "K", speed: 34, src: "gps" });
+const v5142 = craft(5142, 5, "505", { status: "hatta", type: "S", speed: 27, src: "est" });
+const v2208 = craft(2208, 2, "288", { status: "hatta", type: "S", speed: 0, panel: "1.4.1" });
+const v3390 = craft(3390, 3, "350", { status: "hatta", type: "K", speed: 22 });
+const v4410 = craft(4410, 4, "411-7", { status: "hatta", type: "K", speed: 18 });
+let v1127 = byKapi[1127];
+if (!v1127) { v1127 = V.find(x => x.region === 1 && x.status === "cevrimdisi"); delete byKapi[v1127.kapi]; v1127.kapi = 1127; byKapi[1127] = v1127; }
+if (v1127.status !== "cevrimdisi") { v1127.status = "cevrimdisi"; v1127.speed = 0; v1127.src = "gps"; }
+v1127.lastSeen = 26;
+const inGroup = (v, g) => g.codes.includes(v.code);
+
+/* ---------- Alerts ---------- */
+const now = new Date();
+const hhmm = m => { const d = new Date(now.getTime() - m * 60000); return d.toTimeString().slice(0, 5); };
+const ALERTS = [
+  { sev: "crit", v: v5317, title: "GPS anteni şüphesi", detail: "Son 72 saatte 41 GPS kopması, 37'si farklı yerde. Aynı yerlerden geçen diğer araçlarda kopma yok.", ago: 4, kind: "GPS" },
+  { sev: "crit", v: v5142, title: "CAN bağlantısı yok · 18 dk", detail: "Hız ve kilometre gelmiyor. GPS de kesilirse durak takibi durur.", ago: 18, kind: "CAN" },
+  { sev: "high", v: v2208, title: "Panel 3 kez çöktü", detail: "BusPanel 1.4.1 (kademeli yayın). Ajan her seferinde 10 sn içinde yeniden açtı, loglar yüklendi.", ago: 9, kind: "Çökme" },
+  { sev: "high", v: v3390, title: "Validatör verisi yok · 7 dk", detail: "Hat ekranda korunuyor. Validatör kablosu ya da adresi kontrol edilmeli.", ago: 7, kind: "Validatör" },
+  { sev: "med", v: v1127, title: "Çevrimdışı · 26 dk", detail: "Son konum garaj dışında. SIM sinyali zayıftı (−109 dBm).", ago: 26, kind: "Bağlantı" },
+  { sev: "med", v: v4410, title: "Ses bölücü 3 kez yeniden başlatıldı", detail: "Körüklüde ikinci monitörün sesi kesilmiş olabilir.", ago: 35, kind: "Ses" },
+];
+const extraKinds = [
+  ["low", "Disk doluluğu %91", "Anons önbelleği büyüdü. Eski hatların klipleri temizlenebilir.", "Disk"],
+  ["med", "GPS kaybı 4,6 km", "Tünel dışında uzun kayıp. CAN+KML ile ilerlendi, anonslar sürdü.", "GPS"],
+  ["low", "Saat farkı 94 sn", "Cihaz saati sunucudan geride. NTP kontrol edilmeli.", "Saat"],
+  ["med", "Yanlış konum reddedildi", "GPS 3,8 km öteyi gösterdi; CAN kilometresiyle tutmadığı için yok sayıldı.", "GPS"],
+  ["low", "Eski sürüm (1.3.2)", "Güncelleme bekleniyor, araç gece garajda kurulacak.", "Sürüm"],
+];
+for (let i = 0; i < 16; i++) {
+  const k = extraKinds[i % extraKinds.length];
+  const v = pick(V.filter(x => x.status === "hatta" && !ALERTS.some(a => a.v === x)));
+  ALERTS.push({ sev: k[0], v, title: k[1], detail: k[2], ago: 12 + Math.floor(rnd() * 300), kind: k[3] });
+}
+const SEVRANK = { crit: 0, high: 1, med: 2, low: 3 };
+ALERTS.sort((a, b) => SEVRANK[a.sev] - SEVRANK[b.sev] || a.ago - b.ago);
+ALERTS.forEach(a => a.v.issues.push(a));
+
+/* ---------- GPS events ---------- */
+const GPS = [], SPOOF = [];
+function lossOn(v, route, i0, n, ago) {
+  const i1 = Math.min(route.pts.length - 1, i0 + n);
+  const path = route.pts.slice(i0, i1 + 1);
+  let d = 0; for (let i = 1; i < path.length; i++) d += hav(path[i - 1], path[i]);
+  const dur = Math.round(d / (6 + rnd() * 5));
+  GPS.push({ v, code: route.code, region: route.region, path, dist: d, dur, ago });
+}
+const hotspots = [["288", 0.42], ["297-7", 0.63], ["340", 0.18], ["220-7", 0.55], ["505", 0.3]];
+hotspots.forEach(([code, t], hi) => {
+  const r = routeByCode[code]; if (!r) return;
+  const base = Math.floor(t * (r.pts.length - 1));
+  const cnt = [11, 9, 8, 6, 5][hi];
+  const pool = V.filter(x => x.route === r);
+  for (let k = 0; k < cnt; k++) lossOn(pool.length ? pick(pool) : v3390, r, Math.max(0, base + Math.floor((rnd() - .5) * 3)), 2 + Math.floor(rnd() * 3), 20 + Math.floor(rnd() * 2800));
+});
+{ const r = v5317.route; for (let k = 0; k < 14; k++) lossOn(v5317, r, Math.floor(rnd() * (r.pts.length - 4)), 1 + Math.floor(rnd() * 3), 10 + Math.floor(rnd() * 4300)); }
+for (let k = 0; k < 10; k++) { const r = pick(ROUTES); const pool = V.filter(x => x.route === r); lossOn(pool.length ? pick(pool) : v3390, r, Math.floor(rnd() * (r.pts.length - 6)), 2 + Math.floor(rnd() * 5), 30 + Math.floor(rnd() * 4000)); }
+GPS.sort((a, b) => a.ago - b.ago);
+for (let k = 0; k < 9; k++) {
+  const r = pick(ROUTES); const i = Math.floor(rnd() * r.pts.length); const at = r.pts[i];
+  const ang = rnd() * Math.PI * 2, km = 1.5 + rnd() * 5;
+  const to = [at[0] + Math.sin(ang) * km / 111.3, at[1] + Math.cos(ang) * km / (111.3 * KX)];
+  const pool = V.filter(x => x.route === r);
+  SPOOF.push({ v: pool.length ? pick(pool) : v3390, code: r.code, region: r.region, at, to, km, dur: 15 + Math.floor(rnd() * 120), ago: 15 + Math.floor(rnd() * 3500) });
+}
+SPOOF.sort((a, b) => a.ago - b.ago);
+const agoText = m => m < 60 ? m + " dk önce" : m < 1440 ? Math.floor(m / 60) + " sa önce" : Math.floor(m / 1440) + " gün önce";
+const atText = m => { const d = new Date(now.getTime() - m * 60000); const day = m >= 1440 ? d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" }) + " " : ""; return day + d.toTimeString().slice(0, 5); };
+
+/* ---------- State ---------- */
+const st = { view: "harita", region: 0, sel: null, show: { ok: false, est: false, off: false, gar: false, iss: false }, wopen: false, groups: new Set(), watched: new Set(), gpsTab: "loss", rows: 80, ftype: "", fstat: "", fver: "", fq: "", vb: [0, 0, W, H], alertFilter: "" };
+const inRegion = v => !st.region || v.region === st.region;
+
+/* ---------- Map ---------- */
+const svg = $("#map");
+svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+const defs = el("defs", {}, svg);
+const mk = el("marker", { id: "arrow", viewBox: "0 0 10 10", refX: 8, refY: 5, markerWidth: 7, markerHeight: 7, orient: "auto-start-reverse" }, defs); el("path", { d: "M0 0L10 5L0 10z", fill: "#8a3ffc" }, mk);
+el("rect", { x: -2000, y: -2000, width: W + 4000, height: H + 4000, style: "fill:var(--land)" }, svg);
+const L = {};
+["base", "blab", "hot", "routes", "gps", "stops", "gar", "wrings", "buses", "rings", "sel"].forEach(k => L[k] = el("g", {}, svg));
+
+// Basemap: OpenStreetMap roads, rail, parks, water, district borders (one path per class)
+const pathOf = list => list.map(t => "M" + t.replace(/ /g, "L")).join("");
+const polyOf = list => list.map(t => "M" + t.replace(/ /g, "L") + "Z").join("");
+el("path", { class: "b-water", d: polyOf(BASE.water) }, L.base);
+el("path", { class: "b-runway", d: pathOf(BASE.runway) }, L.base);
+el("path", { class: "b-park", d: polyOf(BASE.park) }, L.base);
+el("path", { class: "b-dist", d: pathOf(BASE.district) }, L.base);
+el("path", { class: "b-sec", d: pathOf(BASE.secondary) }, L.base);
+el("path", { class: "b-case", d: pathOf(BASE.primary.concat(BASE.trunk)) }, L.base);
+el("path", { class: "b-case m", d: pathOf(BASE.motorway) }, L.base);
+el("path", { class: "b-road", d: pathOf(BASE.primary.concat(BASE.trunk)) }, L.base);
+el("path", { class: "b-road m", d: pathOf(BASE.motorway) }, L.base);
+el("path", { class: "b-rail", d: pathOf(BASE.rail) }, L.base);
+el("path", { class: "b-sub", d: pathOf(BASE.subway) }, L.base);
+const DPOS = { "Çankaya": [39.875, 32.835], "Altındağ": [39.962, 32.900], "Mamak": [39.910, 32.950], "Keçiören": [40.015, 32.850], "Yenimahalle": [39.995, 32.745], "Etimesgut": [39.925, 32.650], "Sincan": [39.975, 32.560], "Pursaklar": [40.055, 32.900], "Gölbaşı": [39.770, 32.790], "Kahramankazan": [40.110, 32.640], "Akyurt": [40.135, 33.065], "Elmadağ": [39.835, 33.060], "Çubuk": [40.140, 32.930], "Ayaş": [40.080, 32.500] };
+const DL = BASE.dlabel.map(([n, la, lo]) => { const q = DPOS[n] || [la, lo]; const [x, y] = P(q[0], q[1]); const t = el("text", { class: "dlabel", x, y, "text-anchor": "middle" }, L.blab); t.textContent = n; return t; });
+const MARKS = [["Kızılay", 39.9205, 32.8540], ["Ulus", 39.9392, 32.8507], ["Batıkent", 39.9700, 32.7169], ["Bilkent", 39.8700, 32.7490], ["Eryaman", 39.9723, 32.6213], ["AŞTİ", 39.9182, 32.8144], ["Esenboğa Havalimanı", 40.1232, 33.0015]].map(([n, la, lo]) => { const [x, y] = P(la, lo); const d = el("circle", { cx: x, cy: y, r: 2, style: "fill:var(--ink);opacity:.55" }, L.blab); const t = el("text", { class: "lmark", x: x + 5, y: y + 4 }, L.blab); t.textContent = n; return [d, t, x, y]; });
+
+REGIONS.forEach(R => {
+  const g = P(R.garage[0], R.garage[1]);
+  R.gmark = el("rect", { class: "garage", x: g[0] - 5, y: g[1] - 5, width: 10, height: 10, rx: 2 }, L.gar);
+  R.glabel = el("text", { class: "glabel", x: g[0] + 9, y: g[1] + 4 }, L.gar); R.glabel.innerHTML = `${R.n}. Bölge <tspan class="s">· ${esc(R.place)}</tspan>`;
+});
+ROUTES.forEach(r => { r.path = el("polyline", { class: "route", points: r.pts.map(p => P(p[0], p[1]).join(",")).join(" ") }, L.routes); });
+
+V.forEach(v => {
+  v.node = el("circle", { r: 3, class: "bus" }, L.buses);
+  v.node.addEventListener("click", e => { e.stopPropagation(); select(v); });
+  v.ring = null;
+});
+const busClass = v => v.status === "garajda" || v.status === "bakim" ? "gar" : v.status === "cevrimdisi" ? "off" : v.src === "est" ? "est" : "ok";
+const sevOf = v => v.issues.length ? v.issues[0].sev : "";
+function drawBuses() {
+  const k = zoomK();
+  V.forEach(v => {
+    const [x, y] = P(v.lat, v.lon);
+    const cls = busClass(v);
+    const always = v === st.sel || (v.status === "hatta" && isWatched(v)) || (st.show.iss && v.issues.length > 0);
+    const hidden = !st.show[cls] && !always;
+    const dim = (st.region && v.region !== st.region) || st.view === "gps";
+    v.node.setAttribute("cx", x); v.node.setAttribute("cy", y);
+    v.node.setAttribute("r", (v.type === "K" ? 4 : 3.3) * k);
+    v.node.setAttribute("class", "bus " + cls + (hidden ? " hide" : dim ? " dim" : ""));
+    const sv = sevOf(v);
+    if (sv === "crit" || sv === "high") {
+      if (!v.ring) v.ring = el("circle", { class: "ring" + (sv === "high" ? " high" : "") }, L.rings);
+      v.ring.setAttribute("cx", x); v.ring.setAttribute("cy", y); v.ring.setAttribute("r", (sv === "crit" ? 9 : 7) * k);
+      v.ring.style.display = (dim || hidden) ? "none" : "";
+    }
+  });
+  drawSel();
+}
+function isWatched(v) { if (st.watched.has(v.code)) return true; for (const id of st.groups) if (inGroup(v, GROUPS.find(g => g.id === id))) return true; return false; }
+function drawWatch() {
+  L.wrings.textContent = "";
+  if (st.view !== "harita") return;
+  const k = zoomK();
+  V.forEach(v => { if (v.status !== "hatta" || !isWatched(v) || (st.region && v.region !== st.region)) return; const [x, y] = P(v.lat, v.lon); el("circle", { class: "wring", cx: x, cy: y, r: 6.5 * k }, L.wrings); });
+}
+function drawSel() {
+  drawWatch();
+  L.sel.textContent = ""; L.stops.textContent = "";
+  const k = zoomK();
+  ROUTES.forEach(r => r.path.setAttribute("class", "route" + ((st.watched.has(r.code) && st.view === "harita") ? " watched" : "") + (st.sel && st.sel.route === r ? " sel" : "")));
+  if (!st.sel) return;
+  const v = st.sel, [x, y] = P(v.lat, v.lon);
+  if (v.route) {
+    const nx = nextStopIdx(v);
+    v.route.stops.forEach((s, i) => { const [sx, sy] = P(s[1], s[2]); el("circle", { class: "stop" + (i === nx ? " next" : ""), cx: sx, cy: sy, r: (i === nx ? 5 : 2.6) * k }, L.stops); });
+    if (nx >= 0) { const s = v.route.stops[nx], [sx, sy] = P(s[1], s[2]); const t = el("text", { class: "sellabel", x: sx + 8 * k, y: sy - 7 * k, "font-size": 13 * k }, L.sel); t.textContent = "Sıradaki: " + s[0]; }
+  }
+  el("circle", { class: "selring", cx: x, cy: y, r: 10 * k }, L.sel);
+  const t = el("text", { class: "sellabel", x: x + 13 * k, y: y + 6 * k, "font-size": 17 * k }, L.sel); t.textContent = v.kapi;
+}
+function drawGps() {
+  L.gps.textContent = ""; L.hot.textContent = "";
+  if (st.view !== "gps") return;
+  const k = zoomK();
+  if (st.gpsTab === "loss") {
+    const cells = {};
+    GPS.filter(e => !st.region || e.region === st.region).forEach(e => { const [x, y] = P(e.path[0][0], e.path[0][1]); const key = Math.round(x / 14) + ":" + Math.round(y / 14); (cells[key] = cells[key] || []).push([x, y]); });
+    Object.values(cells).filter(c => c.length >= 4).forEach(c => { const x = c.reduce((s, p) => s + p[0], 0) / c.length, y = c.reduce((s, p) => s + p[1], 0) / c.length; el("circle", { class: "hot", cx: x, cy: y, r: (12 + c.length * 2.4) * k }, L.hot); });
+    GPS.forEach((e, i) => {
+      if (st.region && e.region !== st.region) return;
+      el("polyline", { class: "gpspath", points: e.path.map(p => P(p[0], p[1]).join(",")).join(" ") }, L.gps);
+      const [ex, ey] = P(e.path[e.path.length - 1][0], e.path[e.path.length - 1][1]);
+      el("circle", { class: "gpsend", cx: ex, cy: ey, r: 2.8 * k }, L.gps);
+      const [sx, sy] = P(e.path[0][0], e.path[0][1]);
+      const d = el("circle", { class: "gpsdot", cx: sx, cy: sy, r: 4.6 * k }, L.gps);
+      d.addEventListener("click", ev => { ev.stopPropagation(); focusGps(i); });
+    });
+  } else {
+    SPOOF.forEach((e, i) => {
+      if (st.region && e.region !== st.region) return;
+      const [x1, y1] = P(e.at[0], e.at[1]), [x2, y2] = P(e.to[0], e.to[1]);
+      el("line", { class: "spoof", x1, y1, x2, y2, "marker-end": "url(#arrow)" }, L.gps);
+      const a = el("circle", { class: "gpsdot", cx: x1, cy: y1, r: 4.4 * k }, L.gps);
+      a.addEventListener("click", ev => { ev.stopPropagation(); focusSpoof(i); });
+      el("circle", { class: "spoofend", cx: x2, cy: y2, r: 3.2 * k }, L.gps);
+    });
+  }
+}
+function drawRegions() {
+  const k = zoomK();
+  svg.style.setProperty("--z", Math.max(1, Math.min(2.4, 0.9 / k)).toFixed(2));
+  DL.forEach(t => { t.setAttribute("font-size", 15 * k); t.style.display = k < 0.18 ? "none" : ""; });
+  MARKS.forEach(([d, t, x, y]) => { d.setAttribute("r", 2.4 * k); t.setAttribute("font-size", 12 * k); t.setAttribute("x", x + 6 * k); t.setAttribute("y", y + 4 * k); });
+  REGIONS.forEach(R => {
+    const g = P(R.garage[0], R.garage[1]), on = st.region === R.n;
+    R.gmark.setAttribute("x", g[0] - 5 * k); R.gmark.setAttribute("y", g[1] - 5 * k); R.gmark.setAttribute("width", 10 * k); R.gmark.setAttribute("height", 10 * k);
+    R.gmark.setAttribute("class", "garage" + (st.region && !on ? " dim" : ""));
+    R.glabel.setAttribute("font-size", 12 * k); R.glabel.setAttribute("x", g[0] + 9 * k); R.glabel.setAttribute("y", g[1] + 4 * k);
+    R.glabel.style.display = !st.region || on ? "" : "none";
+  });
+}
+
+// zoom / pan
+function zoomK() { const r = svg.getBoundingClientRect(); if (!r.width) return 1; return Math.max(st.vb[2] / r.width, st.vb[3] / r.height) * 1.15; }
+function setVB(vb, redraw = true) { st.vb = vb; svg.setAttribute("viewBox", vb.join(" ")); if (redraw) { drawRegions(); drawBuses(); drawGps(); } }
+function fitBounds(pts, pad = 0.18) {
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  let x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
+  const w = Math.max(60, x1 - x0), h = Math.max(40, y1 - y0);
+  x0 -= w * pad; y0 -= h * pad; setVB([x0, y0, w * (1 + 2 * pad), h * (1 + 2 * pad)]);
+}
+function fitRegion() {
+  const Rs = st.region ? [REGIONS[st.region - 1]] : REGIONS;
+  const pts = []; Rs.forEach(R => { R.anchors.forEach(a => pts.push(P(a[0], a[1]))); pts.push(P(R.garage[0], R.garage[1])); });
+  fitBounds(pts, st.region ? 0.12 : 0.06);
+}
+function zoomAt(f, cx, cy) {
+  const [x, y, w, h] = st.vb; const nw = Math.max(25, Math.min(W * 1.4, w * f)), nh = nw * h / w;
+  setVB([cx - (cx - x) * nw / w, cy - (cy - y) * nh / h, nw, nh]);
+}
+const svgPt = (e) => { const r = svg.getBoundingClientRect(); const [x, y, w, h] = st.vb; const s = Math.max(w / r.width, h / r.height); const ox = (r.width * s - w) / 2, oy = (r.height * s - h) / 2; return [x - ox + (e.clientX - r.left) * s, y - oy + (e.clientY - r.top) * s]; };
+svg.addEventListener("wheel", e => { e.preventDefault(); const [cx, cy] = svgPt(e); zoomAt(e.deltaY > 0 ? 1.18 : 1 / 1.18, cx, cy); }, { passive: false });
+let drag = null;
+svg.addEventListener("pointerdown", e => { if (e.target.closest(".bus,.gpsdot")) return; drag = { x: e.clientX, y: e.clientY, vb: st.vb.slice(), moved: false }; svg.setPointerCapture(e.pointerId); svg.classList.add("drag"); });
+svg.addEventListener("pointermove", e => { if (!drag) return; const r = svg.getBoundingClientRect(); const s = Math.max(drag.vb[2] / r.width, drag.vb[3] / r.height); const dx = (e.clientX - drag.x) * s, dy = (e.clientY - drag.y) * s; if (Math.abs(dx) + Math.abs(dy) > 2) drag.moved = true; setVB([drag.vb[0] - dx, drag.vb[1] - dy, drag.vb[2], drag.vb[3]], false); });
+svg.addEventListener("pointerup", () => { if (drag && drag.moved) { drawRegions(); drawBuses(); drawGps(); } drag = null; svg.classList.remove("drag"); });
+$("#zin").onclick = () => zoomAt(1 / 1.5, st.vb[0] + st.vb[2] / 2, st.vb[1] + st.vb[3] / 2);
+$("#zout").onclick = () => zoomAt(1.5, st.vb[0] + st.vb[2] / 2, st.vb[1] + st.vb[3] / 2);
+$("#zreset").onclick = () => fitRegion();
+window.addEventListener("resize", () => { drawRegions(); drawBuses(); drawGps(); });
+
+/* ---------- Vehicle helpers ---------- */
+function nextStopIdx(v) { if (!v.route) return -1; const T = v.route.stopT; for (let i = 0; i < T.length; i++) if (T[i] > v.t + 0.0005) return i; return T.length - 1; }
+const TYPE = { K: "Körüklü", S: "Solo", A: "Solo · Karsan Atak" };
+const STAT = { hatta: ["Hatta", "ok"], garajda: ["Garajda", "off"], cevrimdisi: ["Çevrimdışı", "off"], bakim: ["Bakımda", "off"] };
+function statusPill(v) {
+  if (v.issues.some(a => a.sev === "crit")) return `<span class="pill crit">Acil sorun</span>`;
+  if (v.status === "hatta" && v.src === "est") return `<span class="pill est">Hatta · tahmini konum</span>`;
+  const s = STAT[v.status]; return `<span class="pill ${s[1]}">${s[0]}</span>`;
+}
+const routeName = v => v.route ? v.route.name : "";
+
+/* ---------- Region rail + KPIs ---------- */
+function renderRail() {
+  const rail = $("#rail");
+  const cnt = vs => ({ total: vs.length, hatta: vs.filter(v => v.status === "hatta").length, gar: vs.filter(v => v.status === "garajda" || v.status === "bakim").length, off: vs.filter(v => v.status === "cevrimdisi").length, bad: vs.filter(v => v.issues.some(a => a.sev === "crit" || a.sev === "high")).length });
+  const all = cnt(V);
+  let h = `<button class="region" aria-pressed="${st.region === 0}" data-r="0"><span class="rn">Tüm Ankara</span><span class="rs"><span>${fmt(all.hatta)} hatta · ${fmt(all.total)} araç</span>${all.bad ? `<span class="c">● ${all.bad}</span>` : ""}</span></button>`;
+  REGIONS.forEach(R => {
+    const c = cnt(V.filter(v => v.region === R.n));
+    h += `<button class="region" aria-pressed="${st.region === R.n}" data-r="${R.n}" title="${esc(R.area)}"><span class="rn">${R.name}</span><span class="rp">${esc(R.place)}</span><span class="rs"><span>${fmt(c.hatta)} hatta</span>${c.bad ? `<span class="c">● ${c.bad} sorun</span>` : ""}</span></button>`;
+  });
+  const vs = V.filter(inRegion), c = cnt(vs);
+  const loss24 = GPS.filter(e => e.ago < 1440 && (!st.region || e.region === st.region)).length;
+  h += `<div class="kpis">
+    <div class="kpi"><b>${fmt(c.hatta)}</b><span><i class="dot" style="background:var(--ok)"></i>Hatta</span></div>
+    <div class="kpi"><b>${fmt(c.gar)}</b><span><i class="dot" style="background:var(--off);opacity:.55"></i>Garaj/bakım</span></div>
+    <div class="kpi"><b>${fmt(c.off)}</b><span><i class="dot" style="background:var(--off)"></i>Çevrimdışı</span></div>
+    <div class="kpi"><b style="color:var(--crit)">${c.bad}</b><span>Sorunlu</span></div>
+    <div class="kpi"><b>${loss24}</b><span>GPS kaybı · 24 sa</span></div></div>`;
+  rail.innerHTML = h;
+  rail.querySelectorAll(".region").forEach(b => b.onclick = () => setRegion(+b.dataset.r));
+}
+
+/* ---------- Map overlays ---------- */
+const dirOf = v => v.route ? (v.t < 0.5 ? "gidis" : "donus") : v.dir;
+function lineRows(vs) {
+  const m = {};
+  vs.forEach(v => { if (v.status !== "hatta" || !v.code) return; const r = m[v.code] = m[v.code] || { code: v.code, n: 0, go: 0, back: 0, est: 0, iss: 0 }; r.n++; dirOf(v) === "gidis" ? r.go++ : r.back++; if (v.src === "est") r.est++; if (v.issues.length) r.iss++; });
+  return Object.values(m).sort((a, b) => b.n - a.n || (a.code > b.code ? 1 : -1));
+}
+function renderWatch() {
+  const box = $("#lines");
+  if (st.view !== "harita") { box.hidden = true; return; }
+  box.hidden = false;
+  const vs = V.filter(inRegion), hat = vs.filter(v => v.status === "hatta").length;
+  const prob = (r) => `${r.est ? `<span class="warn">${r.est} GPS kopuk</span>` : ""}${r.iss ? `<span class="bad">${r.iss} uyarı</span>` : ""}`;
+  let head, cols, rows;
+  if (!st.region) {
+    head = `<b>Ankara · 5 bölge</b><span>${fmt(hat)} otobüs hatta. Bir bölge seçin.</span>`;
+    cols = `<div class="lines-cols"><span>Bölge</span><span>Garaj</span><span style="text-align:right">Hatta</span></div>`;
+    rows = REGIONS.map(R => { const rv = V.filter(v => v.region === R.n && v.status === "hatta"); const est = rv.filter(v => v.src === "est").length, iss = rv.filter(v => v.issues.length).length, lines = new Set(rv.map(v => v.code)).size;
+      return `<button class="lrow" data-r="${R.n}"><span class="code">${R.n}. Bölge</span><span class="nm">${esc(R.place)}</span><span class="cnt">${rv.length}</span><span class="sub">${lines} hat ${prob({ est, iss })}</span></button>`; }).join("");
+  } else {
+    const R = REGIONS[st.region - 1], L = lineRows(vs);
+    head = `<b>${R.name} · ${esc(R.place)}</b><span>${fmt(hat)} otobüs, ${L.length} hatta sefer yapıyor</span>
+      <div class="chips">${GROUPS.filter(g => V.some(v => v.region === R.n && inGroup(v, g) && v.status === "hatta")).map(g => `<button data-g="${g.id}" aria-pressed="${st.groups.has(g.id)}">${esc(g.name)}</button>`).join("")}</div>
+      ${st.watched.size || st.groups.size ? `<button class="clear" id="clearW">Haritayı temizle</button>` : ""}`;
+    cols = `<div class="lines-cols"><span>Hat</span><span>Güzergâh · gidiş / dönüş</span><span style="text-align:right">Araç</span></div>`;
+    rows = L.map(r => `<button class="lrow" data-c="${esc(r.code)}" aria-pressed="${st.watched.has(r.code)}"><span class="code">${esc(r.code)}</span><span class="nm" title="${esc(lineName(r.code))}">${esc(lineName(r.code)) || "—"}</span><span class="cnt">${r.n}</span><span class="sub"><span class="dbar"><i style="width:${r.go / r.n * 100}%;background:var(--accent)"></i><i style="width:${r.back / r.n * 100}%;background:var(--route)"></i></span>${r.go} gidiş · ${r.back} dönüş ${prob(r)}</span></button>`).join("") || `<p style="padding:14px;margin:0;color:var(--muted)">Bu bölgede sefer yapan otobüs yok.</p>`;
+  }
+  box.innerHTML = `<div class="lines-h">${head}</div>${cols}<div class="lines-list">${rows}</div>`;
+  box.querySelectorAll(".lrow[data-r]").forEach(b => b.onclick = () => setRegion(+b.dataset.r));
+  box.querySelectorAll(".lrow[data-c]").forEach(b => b.onclick = () => { const c = b.dataset.c; if (st.watched.has(c)) st.watched.delete(c); else { st.watched.clear(); st.watched.add(c); } st.sel = null; watchChanged(st.watched.has(c) ? c : null); });
+  box.querySelectorAll(".chips button").forEach(b => b.onclick = () => { const k = b.dataset.g; st.groups.has(k) ? st.groups.delete(k) : st.groups.add(k); st.sel = null; watchChanged(); });
+  const cl = $("#clearW", box); if (cl) cl.onclick = () => { st.watched.clear(); st.groups.clear(); st.sel = null; watchChanged(); };
+}
+function setRegion(n) { st.region = n; st.rows = 80; st.wopen = false; st.watched.clear(); st.groups.clear(); st.sel = null; renderAll(true); }
+function watchChanged(code) {
+  renderWatch(); renderLegend(); drawBuses(); renderSide();
+  const vs = V.filter(v => v.status === "hatta" && inRegion(v) && isWatched(v));
+  const r = code && routeByCode[code];
+  if (r) fitBounds(r.pts.map(p => P(p[0], p[1])), 0.08);
+  else if (vs.length) fitBounds(vs.map(v => P(v.lat, v.lon)), 0.15);
+  else fitRegion();
+}
+function renderLegend() {
+  const lg = $("#legend");
+  if (st.view === "gps") {
+    lg.innerHTML = st.gpsTab === "loss"
+      ? `<span class="static"><i class="dot" style="background:var(--crit)"></i>GPS koptu</span><span class="static"><svg width="22" height="6"><line x1="0" y1="3" x2="22" y2="3" stroke="var(--crit)" stroke-width="2" stroke-dasharray="4 3"/></svg>CAN+KML ile gidilen yol</span><span class="static"><i class="dot" style="border:1.5px solid var(--crit);background:var(--panel)"></i>GPS geri geldi</span><span class="static"><i class="dot" style="background:var(--crit);opacity:.3;width:12px;height:12px"></i>Çok aracın koptuğu yer</span>`
+      : `<span class="static"><i class="dot" style="background:var(--crit)"></i>Aracın gerçek yeri</span><span class="static"><svg width="22" height="8"><line x1="0" y1="4" x2="16" y2="4" stroke="#8a3ffc" stroke-width="2" stroke-dasharray="6 3"/><path d="M16 0L22 4L16 8z" fill="#8a3ffc"/></svg>GPS'in gösterdiği yer</span>`;
+    return;
+  }
+  const vs = V.filter(inRegion), c = k => vs.filter(v => busClass(v) === k).length;
+  const items = [["est", "GPS kopuk", "var(--est)", c("est")], ["off", "Çevrimdışı", "var(--off)", c("off")], ["iss", "Uyarılı", "var(--crit)", vs.filter(v => v.issues.length).length], ["ok", "GPS normal", "var(--ok)", c("ok")], ["gar", "Garajda", "var(--off)", c("gar")]];
+  lg.innerHTML = `<span class="static">Haritada göster:</span>` + items.map(([k, n, col, cnt]) => `<button aria-pressed="${st.show[k]}" data-s="${k}"><i class="dot" style="background:${col}${k === "gar" ? ";opacity:.55" : ""}"></i>${n} <b>${fmt(cnt)}</b></button>`).join("");
+  lg.querySelectorAll("button").forEach(b => b.onclick = () => { st.show[b.dataset.s] = !st.show[b.dataset.s]; renderLegend(); drawRegions(); drawBuses(); });
+}
+
+/* ---------- Side panel ---------- */
+const feed = [];
+function renderSide() {
+  const side = $("#side");
+  if (st.sel) return renderDetail(side, st.sel);
+  const al = ALERTS.filter(a => inRegion(a.v));
+  side.innerHTML = `<div class="side-scroll">
+    <div class="sec" id="wsec">${watchHTML()}</div>
+    <div class="sec"><h3>Dikkat gerektirenler <small>${al.length} uyarı</small></h3>
+      ${al.slice(0, 5).map(a => alertHTML(a, true)).join("") || `<p class="m" style="color:var(--muted);margin:0">Bu bölgede açık uyarı yok.</p>`}
+      ${al.length > 5 ? `<button class="btn" id="allAlerts">Bütün uyarılar (${al.length})</button>` : ""}
+    </div>
+    <div class="sec"><h3>Canlı olaylar <small>durağa varışlar</small></h3><div class="feed" id="feed">${feedHTML()}</div></div>
+  </div>`;
+  bindAlerts(side);
+  bindWatch(side);
+  const b = $("#allAlerts", side); if (b) b.onclick = () => setView("uyarilar");
+}
+function watchLists() {
+  const lists = [];
+  [...st.watched].forEach(code => { const r = routeByCode[code]; if (!r || (st.region && r.region !== st.region)) return; lists.push({ key: "c:" + code, code, title: r.name, vs: V.filter(v => v.route === r && v.status === "hatta").sort((a, b) => a.t - b.t) }); });
+  GROUPS.filter(g => st.groups.has(g.id)).forEach(g => lists.push({ key: "g:" + g.id, code: "", title: g.name, note: g.note, vs: V.filter(v => v.status === "hatta" && inRegion(v) && inGroup(v, g)).sort((a, b) => (a.code > b.code) - (a.code < b.code) || a.kapi - b.kapi) }));
+  return lists;
+}
+function watchHTML() {
+  const lists = watchLists();
+  if (!lists.length) return `<h3>Seçili hat</h3><p style="margin:0;color:var(--muted);font-size:13px">${st.region ? "Haritadaki listeden bir hat seçin. O hattaki otobüsler haritada ve burada görünür." : "Önce bir bölge seçin, sonra hat listesinden bir hat."}</p>`;
+  return `<h3>Seçili hat <small>${lists.reduce((n, l) => n + l.vs.length, 0)} araç</small></h3>` + lists.map(l => `
+    <div class="wl">
+      <div class="wlh">${l.code ? `<b class="mono">${l.code}</b>` : ""}<span>${esc(l.title)}</span><button type="button" class="wx" data-un="${l.key}" aria-label="İzlemeyi bırak">Bırak</button></div>
+      ${l.vs.length ? `<div class="wrows">${l.vs.slice(0, 14).map(v => {
+        const nx = v.route ? v.route.stops[nextStopIdx(v)][0] : (v.code + " · " + REGIONS[v.region - 1].name);
+        const gps = v.issues.length ? `<span class="pill crit">${esc(v.issues[0].title.split(" ·")[0])}</span>` : v.src === "est" ? `<span class="pill est">GPS kopuk</span>` : `<span class="pill ok">GPS</span>`;
+        return `<button type="button" class="wrow${st.sel === v ? " on" : ""}" data-k="${v.kapi}"><b class="mono">${v.kapi}</b><span class="nx">${esc(nx)}</span><span class="num sp">${v.speed} km/sa</span>${gps}</button>`; }).join("")}${l.vs.length > 14 ? `<span class="wmore">+${l.vs.length - 14} araç daha</span>` : ""}</div>` : `<p style="margin:0;color:var(--muted);font-size:12.5px">Şu an bu hatta sefer yapan araç yok.</p>`}
+    </div>`).join("");
+}
+function bindWatch(root) {
+  const sec = $("#wsec", root); if (!sec || sec.dataset.bound) return; sec.dataset.bound = "1";
+  sec.addEventListener("pointerdown", e => {
+    const row = e.target.closest(".wrow"); if (row) { select(byKapi[+row.dataset.k], false); const v = byKapi[+row.dataset.k]; const [x, y] = P(v.lat, v.lon); const w = Math.min(st.vb[2], 120), h = w * st.vb[3] / st.vb[2]; setVB([x - w / 2, y - h / 2, w, h]); return; }
+    const un = e.target.closest(".wx"); if (un) { const [t, k] = un.dataset.un.split(":"); t === "c" ? st.watched.delete(k) : st.groups.delete(k); watchChanged(); }
+  });
+}
+function alertHTML(a, compact) {
+  const v = a.v;
+  return `<button class="alert${compact ? " compact" : ""}" data-k="${v.kapi}"><i class="bar sev-${a.sev}"></i><span style="display:grid;gap:2px;min-width:0"><span class="t">${esc(a.title)}<time>${hhmm(a.ago)}</time></span><span class="who">${v.kapi} · ${REGIONS[v.region - 1].name}${v.code ? " · Hat " + v.code : ""}</span><span class="m">${esc(a.detail)}</span></span></button>`;
+}
+function bindAlerts(root) { root.querySelectorAll(".alert").forEach(b => b.onclick = () => { const v = byKapi[+b.dataset.k]; if (st.view !== "harita" && st.view !== "gps") setView("harita"); select(v, true); }); }
+const feedHTML = () => feed.filter(f => inRegion(f.v)).slice(0, 9).map(f => `<div><time>${f.t}</time><span>${f.html}</span></div>`).join("") || `<div><time>—</time><span style="color:var(--muted)">Olay bekleniyor…</span></div>`;
+
+function renderDetail(side, v) {
+  const R = REGIONS[v.region - 1];
+  const nx = nextStopIdx(v);
+  const moving = v.status === "hatta" && v.speed > 0;
+  const shot = v.status === "hatta" ? (v.speed === 0 && v.route ? SHOTS.arrival : SHOTS.route) : SHOTS.waiting;
+  const can = v === v5142 ? ["Yok · 18 dk", "crit"] : v.status === "cevrimdisi" ? ["Bilinmiyor", "off"] : ["Geliyor", "ok"];
+  const val = v === v3390 ? ["Veri yok · 7 dk", "crit"] : v.status === "hatta" ? ["Bağlı · hat " + v.code, "ok"] : v.status === "cevrimdisi" ? ["Bilinmiyor", "off"] : ["Bağlı · hat yok", "ok"];
+  const gps = v === v5317 ? ["Sık kopuyor", "crit"] : v.src === "est" ? ["Yok · CAN+KML", "est"] : v.status === "cevrimdisi" ? ["Bilinmiyor", "off"] : ["11 uydu · ±4 m", "ok"];
+  const spl = v.type === "K" ? (v === v4410 ? ["3 kez yeniden başladı", "warn"] : ["Çalışıyor", "ok"]) : ["Yok (solo)", "off"];
+  const cell = (k, x) => `<div class="hcell"><small>${k}</small><b><i class="dot" style="background:var(--${x[1]})"></i>${x[0]}</b></div>`;
+  const evs = [];
+  v.issues.forEach(a => evs.push([hhmm(a.ago), a.sev === "crit" ? "crit" : "warn", a.title]));
+  if (v.route) { const s = v.route.stops[Math.max(0, nx - 1)]; evs.push([hhmm(2), "ok", s[0] + " durağından kalktı"]); evs.push([hhmm(3), "ok", s[0] + " durağına geldi, anons çaldı"]); }
+  if (v.status === "hatta") evs.push([hhmm(48 + v.kapi % 50), "ok", "Hat " + v.code + " açıldı (validatör)"]);
+  evs.push([hhmm(300 + v.kapi % 200), "ok", "Panel " + v.panel + " sağlıklı başladı"]);
+  side.innerHTML = `
+  <div class="vhead">
+    <button class="back" id="back">← ${st.view === "araclar" ? "Listeye" : "Uyarılara"} dön</button>
+    <div class="vtitle"><b>${v.kapi}</b><span class="plate">${v.plate}</span><span class="type">${TYPE[v.type]}</span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${statusPill(v)}<span style="color:var(--muted);font-size:12.5px">${R.name} · ${esc(R.place)} · ${v.status === "cevrimdisi" ? "son görülme " + agoText(v.lastSeen) : "şimdi çevrimiçi"}</span></div>
+  </div>
+  <div class="side-scroll">
+    <div class="sec">
+      <div class="ipbox"><div><small>SIM sabit IP · HTTPS (VPN)</small><span class="ip">${v.ip}</span></div><button type="button" id="cpip">Kopyala</button></div>
+      ${v.issues.map(alertHTML).join("")}
+    </div>
+    <div class="sec"><h3>Hat ve konum</h3>
+      <dl class="kv">
+        <dt>Hat</dt><dd>${v.code ? `<b class="mono">${v.code}</b> ${esc(routeName(v))}` : "Hat açık değil"}</dd>
+        ${v.route ? `<dt>Sıradaki durak</dt><dd id="dNext">${esc(v.route.stops[nx][0])}</dd>` : ""}
+        <dt>Hız</dt><dd class="num" id="dSpeed">${v.status === "hatta" ? v.speed + " km/sa" : "—"}</dd>
+        <dt>Konum</dt><dd>${v.src === "est" ? "CAN kilometresi + KML (GPS yok)" : v.status === "cevrimdisi" ? "Son bilinen konum" : "GPS"}</dd>
+        <dt>Koordinat</dt><dd class="mono" id="dCoord">${v.lat.toFixed(5)}, ${v.lon.toFixed(5)}</dd>
+      </dl>
+      ${v.route ? "" : v.code ? `<p style="margin:0;font-size:12px;color:var(--muted)">Bu hattın KML'i prototipte yok; araç yaklaşık konumda gösteriliyor.</p>` : ""}
+    </div>
+    <div class="sec"><h3>Ekranda ne var <small>son görüntü · örnek</small></h3>
+      <div class="shot"><img src="${shot}" alt="Aracın yolcu ekranından son görüntü (örnek)" loading="lazy"><span>${hhmm(1)}</span></div>
+    </div>
+    <div class="sec"><h3>Cihaz durumu</h3>
+      <div class="health">${cell("CAN", can)}${cell("Validatör", val)}${cell("GPS anteni", gps)}${cell("Ses bölücü", spl)}${cell("Ekran", v.status === "cevrimdisi" ? ["Bilinmiyor", "off"] : ["Açık · kiosk", "ok"])}${cell("Disk", v.issues.some(a => a.kind === "Disk") ? ["%91 dolu", "warn"] : ["%46 dolu", "ok"])}</div>
+    </div>
+    <div class="sec"><h3>Sürümler</h3>
+      <dl class="kv"><dt>BusPanel</dt><dd class="mono">${v.panel}${v.panel === "1.4.1" ? " · kademeli yayın" : v.panel === "1.3.2" ? " · eski" : ""}</dd><dt>EGO CAN</dt><dd class="mono">0.3.1</dd>${v.type === "K" ? `<dt>hdmi-kontrol</dt><dd class="mono">2.1.0</dd>` : ""}<dt>Ajan</dt><dd class="mono">0.9.4</dd><dt>Hat verisi</dt><dd class="mono">2026.11.03</dd><dt>Android</dt><dd class="mono">RK3568 · 12</dd></dl>
+    </div>
+    <div class="sec"><h3>Son olaylar</h3><div class="timeline">${evs.map(e => `<div><time>${e[0]}</time><i style="background:var(--${e[1]})"></i><span>${esc(e[2])}</span></div>`).join("")}</div></div>
+    <div class="sec"><h3>İşlemler</h3>
+      <div class="actions">
+        <button class="btn primary" data-act="Ekran görüntüsü">Ekran görüntüsü al<small>Yolcu fark etmez</small></button>
+        <button class="btn" data-act="Log toplama">Log topla<small>Son 6 saat</small></button>
+        <button class="btn" data-act="Panel yeniden açma">Paneli yeniden aç<small>~4 sn, kaldığı duraktan</small></button>
+        <button class="btn" data-act="Cihaz yeniden başlatma" ${moving ? "disabled" : ""}>Cihazı yeniden başlat<small>${moving ? "Araç hareket halinde" : "Araç duruyor"}</small></button>
+        <button class="btn" data-act="Ses testi" ${v.status === "hatta" ? "disabled" : ""}>Ses testi<small>${v.status === "hatta" ? "Yalnız garajda" : "Deneme anonsu"}</small></button>
+        <button class="btn" data-act="Güncelleme">Güncelle<small>Gece garajda kurulur</small></button>
+      </div>
+    </div>
+  </div>`;
+  $("#back", side).onclick = () => select(null);
+  $("#cpip", side).onclick = () => { navigator.clipboard && navigator.clipboard.writeText(v.ip).then(() => toast("IP kopyalandı: " + v.ip), () => toast("Kopyalanamadı, IP: " + v.ip)); };
+  side.querySelectorAll("[data-act]").forEach(b => b.onclick = () => toast(b.dataset.act + " komutu " + v.kapi + " için kuyruğa alındı (örnek)"));
+  bindAlerts(side);
+}
+
+function select(v, fly) {
+  st.sel = v || null;
+  renderSide(); drawSel();
+  if (v && fly && (st.view === "harita" || st.view === "gps")) {
+    const pts = v.route ? v.route.pts.map(p => P(p[0], p[1])) : [P(v.lat, v.lon)];
+    if (v.route) fitBounds(pts, 0.08); else { const [x, y] = P(v.lat, v.lon); setVB([x - 90, y - 55, 180, 110]); }
+  }
+  if (st.view === "araclar") renderTable(false);
+}
+let toastT;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => t.hidden = true, 2600); }
+
+/* ---------- Views ---------- */
+function setView(name) {
+  st.view = name;
+  document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", t.dataset.view === name));
+  const mapOn = name === "harita" || name === "gps";
+  $("#mapwrap").hidden = !mapOn; $("#view").hidden = mapOn; $("#gpsbottom").hidden = name !== "gps";
+  $(".stage").style.gridTemplateRows = name === "gps" ? "minmax(0,1fr) auto" : "minmax(0,1fr)";
+  renderWatch(); renderLegend();
+  if (name === "araclar") renderTable(true);
+  if (name === "uyarilar") renderAlertsView();
+  if (name === "guncelleme") renderUpdates();
+  if (name === "gps") renderGpsBottom();
+  if (mapOn) requestAnimationFrame(() => { drawRegions(); drawBuses(); drawGps(); });
+  try { history.replaceState(null, "", "#" + name); } catch (e) {}
+}
+document.querySelectorAll(".tab").forEach(t => t.onclick = () => setView(t.dataset.view));
+
+function filtered() {
+  const q = st.fq.trim().toLowerCase();
+  return V.filter(v => inRegion(v) && (!st.ftype || v.type === st.ftype) && (!st.fstat || (st.fstat === "sorun" ? v.issues.length : v.status === st.fstat)) && (!st.fver || v.panel === st.fver)
+    && (!q || String(v.kapi).includes(q) || v.plate.toLowerCase().replace(/\s/g, "").includes(q.replace(/\s/g, "")) || v.ip.includes(q) || (v.code || "").includes(q)))
+    .sort((a, b) => (b.issues.length ? 4 - SEVRANK[b.issues[0].sev] : 0) - (a.issues.length ? 4 - SEVRANK[a.issues[0].sev] : 0) || a.kapi - b.kapi);
+}
+function renderTable(rebuild) {
+  const view = $("#view");
+  if (rebuild || !$("#vt", view)) {
+    view.innerHTML = `<div class="viewhead"><h2>Araçlar</h2>
+      <select id="ftype" aria-label="Araç tipi"><option value="">Bütün tipler</option><option value="K">Körüklü</option><option value="S">Solo</option><option value="A">Karsan Atak</option></select>
+      <select id="fstat" aria-label="Durum"><option value="">Bütün durumlar</option><option value="sorun">Sorunlu</option><option value="hatta">Hatta</option><option value="garajda">Garajda</option><option value="cevrimdisi">Çevrimdışı</option><option value="bakim">Bakımda</option></select>
+      <select id="fver" aria-label="Sürüm"><option value="">Bütün sürümler</option><option>1.4.1</option><option>1.4.0</option><option>1.3.2</option></select>
+      <input id="fq" type="search" placeholder="Kapı no, plaka, IP, hat" aria-label="Tabloda ara">
+      <span class="count" id="vcount"></span></div>
+      <div class="tablewrap"><table id="vt"><thead><tr><th>Kapı no</th><th>Tip</th><th>Plaka</th><th>Bölge</th><th>Hat</th><th>Durum</th><th>Konum</th><th>SIM IP</th><th>BusPanel</th><th>Sorun</th></tr></thead><tbody></tbody></table></div>
+      <button class="btn more" id="more" hidden>Daha fazla göster</button>`;
+    [["ftype", "ftype"], ["fstat", "fstat"], ["fver", "fver"]].forEach(([id, k]) => { const s = $("#" + id, view); s.value = st[k]; s.onchange = () => { st[k] = s.value; st.rows = 80; renderTable(false); }; });
+    const fq = $("#fq", view); fq.value = st.fq; fq.oninput = () => { st.fq = fq.value; st.rows = 80; renderTable(false); };
+    $("#more", view).onclick = () => { st.rows += 120; renderTable(false); };
+  }
+  const rows = filtered();
+  $("#vcount", view).textContent = fmt(rows.length) + " araç" + (st.region ? " · " + REGIONS[st.region - 1].name : "");
+  $("#vt tbody", view).innerHTML = rows.slice(0, st.rows).map(v => `<tr data-k="${v.kapi}" class="${st.sel === v ? "on" : ""}"><td class="mono"><b>${v.kapi}</b></td><td>${TYPE[v.type]}</td><td class="mono">${v.plate}</td><td>${v.region}. Bölge</td><td class="mono">${v.code || "—"}</td><td>${statusPill(v)}</td><td>${v.status === "hatta" ? (v.src === "est" ? "CAN+KML" : "GPS") : v.status === "cevrimdisi" ? agoText(v.lastSeen) : "—"}</td><td class="mono">${v.ip}</td><td class="mono">${v.panel}</td><td>${v.issues.length ? `<span style="color:var(--${v.issues[0].sev === "crit" ? "crit" : "warn"})">${esc(v.issues[0].title)}</span>` : ""}</td></tr>`).join("");
+  $("#more", view).hidden = rows.length <= st.rows;
+  view.querySelectorAll("tbody tr").forEach(tr => tr.onclick = () => select(byKapi[+tr.dataset.k]));
+}
+
+function renderAlertsView() {
+  const view = $("#view");
+  const kinds = [...new Set(ALERTS.map(a => a.kind))];
+  const list = ALERTS.filter(a => inRegion(a.v) && (!st.alertFilter || a.kind === st.alertFilter));
+  const groups = [["crit", "Acil"], ["high", "Yüksek"], ["med", "Orta"], ["low", "Düşük"]];
+  view.innerHTML = `<div class="viewhead"><h2>Uyarılar</h2><select id="akind" aria-label="Uyarı türü"><option value="">Bütün türler</option>${kinds.map(k => `<option ${st.alertFilter === k ? "selected" : ""}>${k}</option>`).join("")}</select><span class="count">${list.length} açık uyarı · e-posta ve panel bildirimi</span></div>
+  <div style="padding:16px;display:grid;gap:18px">${groups.map(([s, n]) => { const g = list.filter(a => a.sev === s); return g.length ? `<div style="display:grid;gap:8px"><h3 style="margin:0;font-family:var(--display);font-size:16px;font-weight:600">${n} <small style="color:var(--muted);font-weight:400">${g.length}</small></h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:8px">${g.map(alertHTML).join("")}</div></div>` : ""; }).join("")}</div>`;
+  $("#akind", view).onchange = e => { st.alertFilter = e.target.value; renderAlertsView(); };
+  bindAlerts(view);
+}
+
+function renderGpsBottom() {
+  const box = $("#gpsbottom");
+  const loss = GPS.filter(e => !st.region || e.region === st.region), sp = SPOOF.filter(e => !st.region || e.region === st.region);
+  // per-vehicle spread: losses in many different places point at the antenna
+  const byV = {}; GPS.forEach(e => { if (st.region && e.region !== st.region) return; (byV[e.v.kapi] = byV[e.v.kapi] || []).push(e); });
+  const suspects = Object.entries(byV).filter(([, es]) => es.length >= 5).sort((a, b) => b[1].length - a[1].length);
+  const cells = {}; loss.forEach(e => { const k = e.code + "@" + Math.round(e.path[0][0] * 300) + ":" + Math.round(e.path[0][1] * 300); (cells[k] = cells[k] || []).push(e); });
+  const spots = Object.values(cells).filter(c => new Set(c.map(e => e.v.kapi)).size >= 3).sort((a, b) => b.length - a.length);
+  const tbl = st.gpsTab === "loss"
+    ? `<table><thead><tr><th>Başlangıç</th><th>Süre</th><th>Mesafe</th><th>Hat</th><th>Araç</th><th>Bölge</th><th>Nasıl ilerlendi</th></tr></thead><tbody>${loss.map((e) => `<tr data-i="${GPS.indexOf(e)}"><td class="mono">${atText(e.ago)}</td><td class="num">${e.dur >= 60 ? Math.floor(e.dur / 60) + " dk " + (e.dur % 60) + " sn" : e.dur + " sn"}</td><td class="num">${e.dist >= 1000 ? (e.dist / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(e.dist) + " m"}</td><td class="mono">${e.code}</td><td class="mono">${e.v.kapi}</td><td>${e.region}. Bölge</td><td>CAN + KML, anonslar sürdü</td></tr>`).join("")}</tbody></table>`
+    : `<table><thead><tr><th>Zaman</th><th>Sapma</th><th>Süre</th><th>Hat</th><th>Araç</th><th>Gerçek yer</th><th>GPS'in gösterdiği</th><th>Sonuç</th></tr></thead><tbody>${sp.map(e => `<tr data-s="${SPOOF.indexOf(e)}"><td class="mono">${atText(e.ago)}</td><td class="num">${e.km.toFixed(1).replace(".", ",")} km</td><td class="num">${e.dur} sn</td><td class="mono">${e.code}</td><td class="mono">${e.v.kapi}</td><td class="mono">${e.at[0].toFixed(4)}, ${e.at[1].toFixed(4)}</td><td class="mono">${e.to[0].toFixed(4)}, ${e.to[1].toFixed(4)}</td><td>Reddedildi, CAN ile devam</td></tr>`).join("")}</tbody></table>`;
+  box.innerHTML = `<div style="display:grid;grid-template-rows:auto minmax(0,1fr);min-height:0;min-width:0">
+      <div class="viewhead" style="position:static"><h2>GPS raporu</h2><div class="subtabs" role="tablist"><button role="tab" data-g="loss" aria-selected="${st.gpsTab === "loss"}">Kopmalar · ${loss.length}</button><button role="tab" data-g="spoof" aria-selected="${st.gpsTab === "spoof"}">Yanlış konum · ${sp.length}</button></div><span class="count">son 3 gün</span></div>
+      <div class="tablewrap">${tbl}</div></div>
+    <div class="insight">
+      <h4>Anten şüphesi</h4><p>Her yerde kopan araç: sorun büyük ihtimalle anten ya da cihazda.</p>
+      ${suspects.map(([k, es]) => `<button class="irow" data-k="${k}"><span><b>${k}</b> · ${new Set(es.map(e => e.code)).size} hat, ${es.length} kopma</span><span style="color:var(--crit)">bakıma</span></button>`).join("") || `<p>Bu bölgede yok.</p>`}
+      <h4>Sık kopan yerler</h4><p>Birçok aracın aynı yerde koptuğu noktalar: tünel, alt geçit ya da jammer.</p>
+      ${spots.slice(0, 5).map(c => `<button class="irow" data-i="${GPS.indexOf(c[0])}"><span>Hat <b>${c[0].code}</b> · ${new Set(c.map(e => e.v.kapi)).size} araç</span><span class="num">${c.length} kez</span></button>`).join("") || `<p>Bu bölgede yok.</p>`}
+    </div>`;
+  box.querySelectorAll("[data-g]").forEach(b => b.onclick = () => { st.gpsTab = b.dataset.g; renderGpsBottom(); renderLegend(); drawGps(); drawBuses(); });
+  box.querySelectorAll("tr[data-i], .irow[data-i]").forEach(r => r.onclick = () => focusGps(+r.dataset.i));
+  box.querySelectorAll("tr[data-s]").forEach(r => r.onclick = () => focusSpoof(+r.dataset.s));
+  box.querySelectorAll(".irow[data-k]").forEach(r => r.onclick = () => { const v = byKapi[+r.dataset.k]; select(v, true); });
+}
+function focusGps(i) { const e = GPS[i]; st.sel = e.v; renderSide(); fitBounds(e.path.map(p => P(p[0], p[1])).concat([P(e.path[0][0] + .004, e.path[0][1] + .006), P(e.path[0][0] - .004, e.path[0][1] - .006)]), 0.3); }
+function focusSpoof(i) { const e = SPOOF[i]; st.sel = e.v; renderSide(); fitBounds([P(e.at[0], e.at[1]), P(e.to[0], e.to[1])], 0.25); }
+
+function renderUpdates() {
+  const view = $("#view");
+  const vs = V.filter(inRegion), n = vs.length;
+  const by = k => vs.filter(v => v.panel === k).length;
+  const stages = [["Pilot", "10 araç", 10, 10, "done"], ["%5", "102 araç", 102, 102, "done"], ["%25", "508 araç", 380, 508, "run"], ["Tüm filo", "2.032 araç", 0, 2032, ""]];
+  const bar = (label, parts) => `<div class="vbar"><span>${label}</span><span class="track">${parts.map(p => `<i style="width:${p[1] / n * 100}%;background:${p[2]}" title="${p[0]}: ${p[1]}"></i>`).join("")}</span><span class="num" style="text-align:right">${fmt(n)}</span></div>`;
+  view.innerHTML = `<div class="viewhead"><h2>Güncellemeler</h2><span class="count">BusPanel 1.4.1 · kademeli yayın sürüyor</span></div>
+  <div class="upd">
+    <div class="stages">${stages.map(s => `<div class="stage-c ${s[4]}"><b>${s[0]}</b><small>${s[1]}${s[4] === "done" ? " · tamamlandı" : s[4] === "run" ? " · sürüyor" : " · bekliyor"}</small><span class="prog"><i style="width:${s[2] / s[3] * 100}%"></i></span><small class="num">${fmt(s[2])} / ${fmt(s[3])} kuruldu</small></div>`).join("")}</div>
+    <div class="grid2">
+      <div class="box"><h4>Yeni sürüm sağlığı</h4>
+        <div class="metric"><span>Çökme oranı (24 sa)</span><b class="num">%0,4 <small style="color:var(--ok);font-weight:400">önceki %0,6</small></b></div>
+        <div class="metric"><span>Ortalama anons gecikmesi</span><b class="num">0,8 sn <small style="color:var(--ok);font-weight:400">önceki 1,1 sn</small></b></div>
+        <div class="metric"><span>5 dk içinde sağlıklı açılış</span><b class="num">380 / 380</b></div>
+        <div class="metric"><span>Otomatik geri dönüş</span><b class="num">0</b></div>
+        <div class="metric"><span>Sorunlu araç</span><b class="num" style="color:var(--warn)">2208 · 3 çökme</b></div>
+      </div>
+      <div class="box"><h4>Sürüm dağılımı ${st.region ? "· " + REGIONS[st.region - 1].name : ""}</h4>
+        ${bar("BusPanel", [["1.4.1", by("1.4.1"), "var(--accent)"], ["1.4.0", by("1.4.0"), "var(--ok)"], ["1.3.2", by("1.3.2"), "var(--warn)"]])}
+        <div style="display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap"><span><i class="dot" style="background:var(--accent)"></i> 1.4.1 · ${fmt(by("1.4.1"))}</span><span><i class="dot" style="background:var(--ok)"></i> 1.4.0 · ${fmt(by("1.4.0"))}</span><span><i class="dot" style="background:var(--warn)"></i> 1.3.2 · ${fmt(by("1.3.2"))}</span></div>
+        ${bar("EGO CAN", [["0.3.1", n, "var(--ok)"]])}${bar("Ajan", [["0.9.4", n, "var(--ok)"]])}
+      </div>
+      <div class="box"><h4>Yolcuyu rahatsız etmeme kuralları</h4>
+        <ol class="rules"><li>İndirme seferde yapılabilir, kurulum yapılmaz.</li><li>Kurulum gece garajda ya da sefer dışında: hat kapalı, araç duruyor, 5 dk anons yok.</li><li>Kurulumda ekranda 3–5 sn Ankara görseli kalır, panel kaldığı duraktan devam eder.</li><li>5 dk içinde "sağlıklı" bildirimi gelmezse önceki sürüme dönülür, yayın durur.</li><li>Her adımda çökme oranı ve anons gecikmesi önceki sürümle karşılaştırılır.</li></ol>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- Search ---------- */
+const q = $("#q"), hits = $("#hits");
+q.addEventListener("input", () => {
+  const s = q.value.trim().toLowerCase().replace(/\s/g, "");
+  if (s.length < 2) { hits.hidden = true; return; }
+  const res = V.filter(v => String(v.kapi).startsWith(s) || v.plate.toLowerCase().replace(/\s/g, "").includes(s) || v.ip.startsWith(s)).slice(0, 7);
+  hits.innerHTML = res.map(v => `<button data-k="${v.kapi}"><b class="mono">${v.kapi}</b><span class="mono" style="color:var(--muted)">${v.plate} · ${v.ip}</span><span>${v.region}. B.</span></button>`).join("") || `<div style="padding:10px;color:var(--muted)">Eşleşen araç yok</div>`;
+  hits.hidden = false;
+  hits.querySelectorAll("button").forEach(b => b.onclick = () => { hits.hidden = true; q.value = ""; const v = byKapi[+b.dataset.k]; if (st.region && v.region !== st.region) { st.region = v.region; renderAll(false); } if (st.view !== "harita") setView("harita"); select(v, true); });
+});
+q.addEventListener("keydown", e => { if (e.key === "Enter") { const b = hits.querySelector("button"); if (b) b.click(); } if (e.key === "Escape") hits.hidden = true; });
+document.addEventListener("click", e => { if (!e.target.closest(".search")) hits.hidden = true; });
+
+/* ---------- Live simulation ---------- */
+const movers = V.filter(v => v.route && v.status === "hatta");
+function tick() {
+  const t = new Date();
+  $("#clock").textContent = t.toTimeString().slice(0, 8);
+  movers.forEach(v => {
+    if (v.speed === 0) { if (rnd() < 0.15) v.speed = 15 + Math.floor(rnd() * 30); return; }
+    const before = nextStopIdx(v);
+    v.t += (v.speed / 3.6) * 2 * 6 / v.route.len;          // 6x faster than real time
+    if (v.t >= 1) { v.t = 0; }
+    [v.lat, v.lon] = posOnRoute(v.route, v.t);
+    const after = nextStopIdx(v);
+    if (after !== before && before >= 0) {
+      const s = v.route.stops[before][0];
+      feed.unshift({ v, t: t.toTimeString().slice(0, 5), html: `<b class="mono">${v.kapi}</b> · ${v.route.code} · ${esc(s)} durağına geldi` });
+      if (rnd() < 0.3) v.speed = 0;
+    }
+    if (rnd() < 0.05) v.speed = Math.max(0, Math.min(55, v.speed + Math.floor((rnd() - .5) * 16)));
+  });
+  if (feed.length > 40) feed.length = 40;
+  if (st.view === "harita" || st.view === "gps") drawBuses();
+  const f = $("#feed"); if (f) f.innerHTML = feedHTML();
+  const ws = $("#wsec"); if (ws && !st.sel) ws.innerHTML = watchHTML();
+  if (st.sel && st.sel.route && st.sel.status === "hatta") {
+    const v = st.sel, a = $("#dNext"), b = $("#dSpeed"), c = $("#dCoord");
+    if (a) a.textContent = v.route.stops[nextStopIdx(v)][0];
+    if (b) b.textContent = v.speed + " km/sa";
+    if (c) c.textContent = v.lat.toFixed(5) + ", " + v.lon.toFixed(5);
+  }
+}
+
+function renderAll(fit) {
+  renderRail(); renderWatch(); renderLegend(); renderSide();
+  $("#alertBadge").textContent = ALERTS.filter(a => inRegion(a.v) && (a.sev === "crit" || a.sev === "high")).length;
+  if (st.view === "araclar") renderTable(false);
+  if (st.view === "uyarilar") renderAlertsView();
+  if (st.view === "guncelleme") renderUpdates();
+  if (st.view === "gps") renderGpsBottom();
+  if (fit) fitRegion(); else { drawRegions(); drawBuses(); drawGps(); }
+}
+
+/* ---------- Google Maps layer (used when a Maps API key is configured) ---------- */
+const ORIG = { drawBuses, drawSel, drawGps, drawRegions, drawWatch, fitBounds, setVB };
+function useGoogle() {
+  const g = google.maps;
+  const box = $("#gmap"); box.hidden = false; svg.style.display = "none"; $(".attr").hidden = true;
+  const dark = document.documentElement.dataset.theme === "dark" || (document.documentElement.dataset.theme !== "light" && matchMedia("(prefers-color-scheme: dark)").matches);
+  const LIGHT = [
+    { featureType: "poi", stylers: [{ visibility: "off" }] },
+    { featureType: "transit", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+    { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+    { elementType: "geometry", stylers: [{ saturation: -70 }, { lightness: 8 }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ saturation: -100 }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9dfea" }] },
+  ];
+  const DARK = [
+    { elementType: "geometry", stylers: [{ color: "#141c21" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#8a99a2" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#141c21" }] },
+    { featureType: "poi", stylers: [{ visibility: "off" }] },
+    { featureType: "transit", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#2a363c" }] },
+    { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#10242d" }] },
+  ];
+  const map = new g.Map(box, { center: { lat: 39.93, lng: 32.80 }, zoom: 11, disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false, styles: LIGHT });
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const c = { ok: css("--ok"), est: css("--est"), off: css("--off"), gar: css("--off"), crit: css("--crit"), mark: css("--mark"), accent: css("--accent"), ink: css("--ink"), panel: css("--panel") };
+  const LL = (lat, lon) => ({ lat, lng: lon });
+  const toLL = p => { const q = UNP(p[0], p[1]); return LL(q[0], q[1]); };
+  const label = text => ({ text, className: "gml", color: c.ink, fontSize: "12px", fontWeight: "600" });
+
+  ROUTES.forEach(r => { r.gl = new g.Polyline({ map, path: r.pts.map(p => LL(p[0], p[1])), visible: false, clickable: false, strokeWeight: 4, strokeOpacity: .95, strokeColor: c.mark, zIndex: 5 }); });
+  REGIONS.forEach(R => { R.gm = new g.Marker({ map, position: LL(R.garage[0], R.garage[1]), clickable: false, zIndex: 3, icon: { path: "M-6,-6 L6,-6 L6,6 L-6,6 Z", fillColor: c.ink, fillOpacity: .85, strokeWeight: 0, scale: 1, labelOrigin: new g.Point(0, -14) }, label: label(R.n + ". Bölge · " + R.place) }); });
+
+  drawRegions = function () { REGIONS.forEach(R => R.gm.setVisible(!st.region || st.region === R.n)); };
+  drawWatch = function () {};
+  drawBuses = function () {
+    V.forEach(v => {
+      const cls = busClass(v);
+      const always = v === st.sel || (v.status === "hatta" && isWatched(v)) || (st.show.iss && v.issues.length > 0);
+      const show = st.view === "harita" && (st.show[cls] || always) && !(st.region && v.region !== st.region);
+      if (!show) { if (v.gm) v.gm.setVisible(false); return; }
+      const sv = sevOf(v);
+      const ring = v === st.sel ? c.ink : sv === "crit" ? c.crit : sv === "high" ? c.est : (v.status === "hatta" && isWatched(v)) ? c.mark : "";
+      if (!v.gm) { v.gm = new g.Marker({ map, title: String(v.kapi) }); v.gm.addListener("click", () => select(v)); }
+      v.gm.setPosition(LL(v.lat, v.lon));
+      const key = cls + ring + v.type + (v === st.sel);
+      if (v.gmKey !== key) {
+        v.gmKey = key;
+        v.gm.setIcon({ path: g.SymbolPath.CIRCLE, scale: v.type === "K" ? 6.5 : 5.5, fillColor: c[cls], fillOpacity: 1, strokeColor: ring || "#ffffff", strokeWeight: ring ? 3.5 : 1.5, labelOrigin: new g.Point(0, -2.6) });
+        v.gm.setLabel(v === st.sel ? label(String(v.kapi)) : null);
+        v.gm.setZIndex(v === st.sel ? 40 : ring ? 20 : 10);
+      }
+      v.gm.setVisible(true);
+    });
+    drawSel();
+  };
+  let stopMarks = [], stopKey = "";
+  drawSel = function () {
+    ROUTES.forEach(r => { const s = st.sel && st.sel.route === r, w = st.watched.has(r.code) && st.view === "harita"; r.gl.setOptions({ visible: s || w, strokeColor: s ? c.accent : c.mark, strokeWeight: s ? 5 : 4, zIndex: s ? 6 : 5 }); });
+    const v = st.sel, nx = v && v.route ? nextStopIdx(v) : -1, key = v && v.route ? v.route.code + ":" + nx : "";
+    if (key === stopKey) return;
+    stopKey = key; stopMarks.forEach(m => m.setMap(null)); stopMarks = [];
+    if (!key) return;
+    v.route.stops.forEach((s, i) => stopMarks.push(new g.Marker({ map, position: LL(s[1], s[2]), clickable: false, zIndex: i === nx ? 9 : 7,
+      icon: { path: g.SymbolPath.CIRCLE, scale: i === nx ? 6 : 3.2, fillColor: i === nx ? c.mark : "#ffffff", fillOpacity: 1, strokeColor: i === nx ? c.ink : c.accent, strokeWeight: 1.5, labelOrigin: new g.Point(0, -3.4) },
+      label: i === nx ? label("Sıradaki: " + s[0]) : null })));
+  };
+  let gpsObjs = [];
+  drawGps = function () {
+    gpsObjs.forEach(o => o.setMap(null)); gpsObjs = [];
+    if (st.view !== "gps") return;
+    const dot = (p, fill, stroke, scale, z) => new g.Marker({ map, position: LL(p[0], p[1]), zIndex: z, icon: { path: g.SymbolPath.CIRCLE, scale, fillColor: fill, fillOpacity: 1, strokeColor: stroke, strokeWeight: 1.5 } });
+    if (st.gpsTab === "loss") {
+      const cells = {};
+      GPS.filter(e => !st.region || e.region === st.region).forEach(e => { const k = Math.round(e.path[0][0] / 0.006) + ":" + Math.round(e.path[0][1] / 0.008); (cells[k] = cells[k] || []).push(e.path[0]); });
+      Object.values(cells).filter(cl => cl.length >= 4).forEach(cl => gpsObjs.push(new g.Circle({ map, center: LL(cl.reduce((s, p) => s + p[0], 0) / cl.length, cl.reduce((s, p) => s + p[1], 0) / cl.length), radius: 300 + cl.length * 60, strokeWeight: 0, fillColor: c.crit, fillOpacity: .14, clickable: false })));
+      GPS.forEach((e, i) => {
+        if (st.region && e.region !== st.region) return;
+        gpsObjs.push(new g.Polyline({ map, path: e.path.map(p => LL(p[0], p[1])), strokeOpacity: 0, clickable: false, zIndex: 5, icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: 1, strokeColor: c.crit, strokeWeight: 3, scale: 2 }, offset: "0", repeat: "10px" }] }));
+        gpsObjs.push(dot(e.path[e.path.length - 1], "#ffffff", c.crit, 3.5, 6));
+        const m = dot(e.path[0], c.crit, "#ffffff", 6, 8); m.addListener("click", () => focusGps(i)); gpsObjs.push(m);
+      });
+    } else {
+      SPOOF.forEach((e, i) => {
+        if (st.region && e.region !== st.region) return;
+        gpsObjs.push(new g.Polyline({ map, path: [LL(e.at[0], e.at[1]), LL(e.to[0], e.to[1])], strokeOpacity: 0, clickable: false, zIndex: 5,
+          icons: [{ icon: { path: "M 0,-1 0,1", strokeOpacity: 1, strokeColor: "#8a3ffc", strokeWeight: 3, scale: 2 }, offset: "0", repeat: "12px" }, { icon: { path: g.SymbolPath.FORWARD_CLOSED_ARROW, fillColor: "#8a3ffc", fillOpacity: 1, strokeWeight: 0, scale: 4 }, offset: "100%" }] }));
+        const m = dot(e.at, c.crit, "#ffffff", 6, 8); m.addListener("click", () => focusSpoof(i)); gpsObjs.push(m);
+      });
+    }
+  };
+  fitBounds = function (pts) { const b = new g.LatLngBounds(); pts.forEach(p => b.extend(toLL(p))); map.fitBounds(b, 70); };
+  setVB = function (vb) { map.panTo(toLL([vb[0] + vb[2] / 2, vb[1] + vb[3] / 2])); map.setZoom(Math.max(map.getZoom(), 15)); };
+  $("#zin").onclick = () => map.setZoom(map.getZoom() + 1);
+  $("#zout").onclick = () => map.setZoom(map.getZoom() - 1);
+  window.gm_authFailure = () => {
+    drawBuses = ORIG.drawBuses; drawSel = ORIG.drawSel; drawGps = ORIG.drawGps; drawRegions = ORIG.drawRegions; drawWatch = ORIG.drawWatch; fitBounds = ORIG.fitBounds; setVB = ORIG.setVB;
+    box.hidden = true; svg.style.display = ""; $(".attr").hidden = false;
+    $("#zin").onclick = () => zoomAt(1 / 1.5, st.vb[0] + st.vb[2] / 2, st.vb[1] + st.vb[3] / 2);
+    $("#zout").onclick = () => zoomAt(1.5, st.vb[0] + st.vb[2] / 2, st.vb[1] + st.vb[3] / 2);
+    fitRegion(); toast("Google Maps anahtarı kabul edilmedi; OpenStreetMap haritası kullanılıyor.");
+  };
+  drawRegions(); drawBuses(); drawGps(); fitRegion();
+}
+window.__useGoogle = () => { try { useGoogle(); } catch (e) { console.error(e); toast("Google Maps açılamadı; OpenStreetMap haritası kullanılıyor."); } };
+if (window.MAPS_KEY) {
+  const s = document.createElement("script");
+  s.src = "https://maps.googleapis.com/maps/api/js?key=" + encodeURIComponent(window.MAPS_KEY) + "&callback=__useGoogle&language=tr&region=TR&v=weekly";
+  s.async = true; s.onerror = () => toast("Google Maps yüklenemedi; OpenStreetMap haritası kullanılıyor.");
+  document.head.appendChild(s);
+}
+
+// seed the feed with recent arrivals so the panel opens populated
+for (let i = 0; i < 10; i++) { const v = pick(movers); const s = v.route.stops[Math.max(0, nextStopIdx(v) - 1)][0]; const d = new Date(now.getTime() - i * 47000); feed.push({ v, t: d.toTimeString().slice(0, 5), html: `<b class="mono">${v.kapi}</b> · ${v.route.code} · ${esc(s)} durağına geldi` }); }
+
+const start = (location.hash || "").slice(1);
+renderAll(false);
+requestAnimationFrame(() => fitRegion());
+setView(["harita", "araclar", "gps", "uyarilar", "guncelleme"].includes(start) ? start : "harita");
+tick();
+setInterval(tick, 2000);
+})();
+</script>
