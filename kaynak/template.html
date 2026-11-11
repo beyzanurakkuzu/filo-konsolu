@@ -595,6 +595,7 @@ const SHARE = [380, 470, 360, 380, 442];
 const types = shuffle([].concat(Array(ARTIC).fill("K"), Array(KARSAN).fill("A"), Array(TOTAL - ARTIC - KARSAN).fill("S")));
 const LET = ["EA", "EB", "EC", "ED", "EF", "EG", "EH", "EK", "EL", "EM"];
 const usedPlates = new Set();
+const LINE_COUNT = {}, KML_COUNT = {}, KML_CAP = Object.fromEntries(ROUTES.map(r => [r.code, 8 + Math.floor(rnd() * 7)]));
 const V = [];
 let idx = 0;
 REGIONS.forEach((R, ri) => {
@@ -607,9 +608,16 @@ REGIONS.forEach((R, ri) => {
     const status = u < 0.73 ? "hatta" : u < 0.93 ? "garajda" : u < 0.975 ? "cevrimdisi" : "bakim";
     const v = { dir: rnd() < 0.5 ? "gidis" : "donus", kapi, plate, type, region: R.n, ip: "10." + (20 + R.n) + "." + Math.floor(k / 250) + "." + (k % 250 + 2), status, route: null, code: null, t: 0, speed: 0, src: "gps", lat: 0, lon: 0, issues: [], lastSeen: 0 };
     if (status === "hatta" || status === "cevrimdisi") {
-      if (R.kml.length && rnd() < 0.22) { v.route = routeByCode[pick(R.kml)]; v.code = v.route.code; v.t = rnd(); [v.lat, v.lon] = posOnRoute(v.route, v.t); }
+      const kmlCode = R.kml.length ? pick(R.kml) : null;
+      // bir hatta gerçekçi araç sayısı: güzergâhı çizilen hatta en çok ~14 araç
+      if (kmlCode && rnd() < 0.22 && (KML_COUNT[kmlCode] || 0) < KML_CAP[kmlCode]) { KML_COUNT[kmlCode] = (KML_COUNT[kmlCode] || 0) + 1; v.route = routeByCode[kmlCode]; v.code = v.route.code; v.t = rnd(); [v.lat, v.lon] = posOnRoute(v.route, v.t); }
       else {
-        v.code = pick(R.codes);
+        // hat başına en çok 20 araç; bilinen hatlar dolunca bölgenin numara aralığında başka hatlar (adı EGO listesinden gelecek)
+        let code = pick(R.codes), guard = 0;
+        while ((LINE_COUNT[code] || 0) >= 20 && guard++ < 40) code = pick(R.codes);
+        if ((LINE_COUNT[code] || 0) >= 20) { do { code = String(R.n * 100 + 1 + Math.floor(rnd() * 99)); } while (R.codes.includes(code) || routeByCode[code]); R.codes.push(code); }
+        LINE_COUNT[code] = (LINE_COUNT[code] || 0) + 1;
+        v.code = code;
         const pool = v.code === "442" ? AIR_POOL : R.pool;
         const p = pool.length ? pick(pool) : P(R.anchors[0][0], R.anchors[0][1]);
         [v.lat, v.lon] = UNP(p[0], p[1]);
