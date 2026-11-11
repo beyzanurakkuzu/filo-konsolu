@@ -864,13 +864,16 @@ function drawRegions() {
   const k = zoomK();
   svg.style.setProperty("--z", Math.max(1, Math.min(2.4, 0.9 / k)).toFixed(2));
   DL.forEach(t => { t.setAttribute("font-size", 15 * k); t.style.display = k < 0.18 ? "none" : ""; });
-  MARKS.forEach(([d, t, x, y]) => { d.setAttribute("r", 2.4 * k); t.setAttribute("font-size", 12 * k); t.setAttribute("x", x + 6 * k); t.setAttribute("y", y + 4 * k); });
+  // semt adları uzaktan bakınca garaj etiketleriyle çakışmasın: yakınlaşınca görünür
+  const showMarks = k < 1.15;
+  MARKS.forEach(([d, t, x, y]) => { d.setAttribute("r", 2.4 * k); t.setAttribute("font-size", 12 * k); t.setAttribute("x", x + 6 * k); t.setAttribute("y", y + 4 * k); d.style.display = t.style.display = showMarks ? "" : "none"; });
   REGIONS.forEach(R => {
     const g = P(R.garage[0], R.garage[1]), on = st.region === R.n;
     R.gmark.setAttribute("x", g[0] - 5 * k); R.gmark.setAttribute("y", g[1] - 5 * k); R.gmark.setAttribute("width", 10 * k); R.gmark.setAttribute("height", 10 * k);
     R.gmark.setAttribute("class", "garage" + (st.region && !on ? " dim" : ""));
     R.glabel.setAttribute("font-size", 12 * k); R.glabel.setAttribute("x", g[0] + 9 * k); R.glabel.setAttribute("y", g[1] + 4 * k);
     R.glabel.style.display = !st.region || on ? "" : "none";
+    const sub = R.glabel.querySelector("tspan"); if (sub) sub.style.display = on ? "" : "none";
   });
 }
 
