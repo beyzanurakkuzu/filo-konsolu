@@ -113,7 +113,28 @@ button { cursor: pointer; }
 #map { width: 100%; height: 100%; display: block; background: var(--land); touch-action: none; cursor: grab; }
 #map.drag { cursor: grabbing; }
 #gmap { position: absolute; inset: 0; z-index: 0; }
-.mapbar, .legend, .maptools, .attr { z-index: 2; }
+.lines, .legend, .maptools, .attr { z-index: 2; }
+.lines { position: absolute; left: 10px; top: 10px; width: min(340px, calc(100% - 64px)); max-height: calc(100% - 74px); display: flex; flex-direction: column; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 10px 28px -16px rgba(0,0,0,.45); overflow: hidden; }
+.lines-h { padding: 12px 14px 10px; display: grid; gap: 3px; border-bottom: 1px solid var(--line); }
+.lines-h b { font-family: var(--display); font-size: 20px; font-weight: 700; line-height: 1.1; }
+.lines-h span { color: var(--muted); font-size: 12.5px; }
+.lines-h .chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+.lines-h .chips button { border: 1px solid var(--line); background: var(--panel-2); border-radius: 999px; padding: 3px 10px; font-size: 12px; }
+.lines-h .chips button[aria-pressed="true"] { background: var(--mark); border-color: var(--mark); color: #1d1600; font-weight: 600; }
+.lines-h .clear { justify-self: start; border: 0; background: none; color: var(--accent); padding: 0; font-weight: 500; font-size: 12.5px; margin-top: 2px; }
+.lines-cols { display: grid; grid-template-columns: 64px minmax(0, 1fr) 44px; gap: 10px; padding: 6px 14px; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; border-bottom: 1px solid var(--line); }
+.lines-list { overflow-y: auto; min-height: 0; }
+.lrow { display: grid; grid-template-columns: 64px minmax(0, 1fr) 44px; gap: 2px 10px; width: 100%; text-align: left; border: 0; border-bottom: 1px solid var(--line); background: var(--panel); padding: 9px 14px; align-items: center; }
+.lrow:hover { background: var(--panel-2); }
+.lrow[aria-pressed="true"] { background: var(--accent-soft); box-shadow: inset 4px 0 0 var(--mark); }
+.lrow .code { font-family: var(--mono); font-weight: 600; font-size: 14px; }
+.lrow .nm { font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lrow .cnt { font-family: var(--display); font-size: 20px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.lrow .sub { grid-column: 2 / 4; display: flex; gap: 8px; align-items: center; font-size: 11.5px; color: var(--muted); }
+.lrow .dbar { flex: 1; height: 5px; border-radius: 3px; background: var(--panel-2); display: flex; overflow: hidden; max-width: 90px; }
+.lrow .dbar i { display: block; height: 100%; }
+.lrow .warn { color: var(--est); font-weight: 600; } .lrow .bad { color: var(--crit); font-weight: 600; }
+@media (max-width: 860px) { .lines { max-height: 46%; } }
 .gml { text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel), 0 0 2px var(--panel); white-space: nowrap; }
 .maptools { position: absolute; right: 10px; top: 10px; display: grid; gap: 4px; }
 .maptools button { width: 32px; height: 32px; border: 1px solid var(--line); background: var(--panel); border-radius: 8px; font-size: 16px; font-weight: 600; }
@@ -350,7 +371,7 @@ tbody tr.on { background: var(--accent-soft); }
       <div class="card mapwrap" id="mapwrap">
         <svg id="map" role="img" aria-label="Ankara filo haritası"></svg>
         <div id="gmap" hidden></div>
-        <div class="mapbar"><div class="where" id="where"></div><div class="wwrap" id="wwrap"></div></div>
+        <div class="lines" id="lines"></div>
         <span class="attr">© OpenStreetMap katkıcıları</span>
         <div class="maptools">
           <button type="button" id="zin" aria-label="Yakınlaştır">+</button>
@@ -449,6 +470,16 @@ function posOnRoute(r, t) {
   return [a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f];
 }
 
+// Hat adları: ego.gov.tr ring ve gece hatları sayfaları (11.11.2026)
+const NAMES = {
+  "107-6": "Ulus - Gölbaşı Toki - Gölbaşı", "110": "Bilkent Metro - Bilkent - Beytepe Mah.", "113": "Tarım Bakanlığı Metro - Ankara Şehir Hastanesi", "130": "Beytepe Metro - Hacettepe Kampüsü", "132": "Söğütözü Metro - Çukurambar Yüzüncü Yıl", "134": "Söğütözü Metro - Çukurambar - Çiğdem Mah.", "136": "Söğütözü Metro - 100. Yıl - Çiğdem Mah.", "167": "MTA - Emsan Sit. - Söğütözü Cad.", "171": "Bilkent Metro - M. Kemal Mah.", "174": "Beytepe Metro - Beysukent Angora Evleri", "175": "Bilkent Metro - Beytepe Mah.", "176": "Bilkent Metro - Bilkent Üniversitesi",
+  "202": "İvedik Metro - Yenimahalle", "204": "İncirli - Meteoroloji Metro", "205": "İvedik Metro - Anadolu Mah. - Yükseltepe", "206": "İvedik Metro - Etlik Şehir Hastanesi", "207": "İvedik Metro - Kardeşler", "208": "İvedik Metro - Kardeşler - Kurtini", "209": "Hastane Metro - Urankent", "210": "Hastane Metro - Karşıyaka Mezarlık", "211": "Hastane Metro - Çamlıca Mah. - Timko", "213": "Hastane Metro - Şentepe - Yükseltepe", "214": "Macunköy Metro - Serhat Sitesi", "215": "Hastane Metro - Yakacık", "216": "Macunköy Metro - Mehmet Akif Ersoy Cad.", "217": "Hastane Metro - Yuva Karacakaya", "222": "İncirli - Sakız Ağacı Cad. - Meteoroloji Metro", "226": "Hastane Metro - Memlik - Villa", "227": "Hastane Metro - Kuzeyyıldızı Mah.", "232": "Batıkent Metro - Botanik Metro - Mebuskent", "233": "Batıkent - Anadolu Bulvarı - Eskişehir Yolu", "234": "Ostim Metro - İvedik OSB", "236": "Ostim Metro - Batıkent - Şaşmaz - Ümitköy Metro", "237": "Ostim Metro - Uzayçağı Cad. - İvedik OSB", "238": "Ostim Metro - Atisan Sanayi Sitesi", "240": "Batıkent Metro - Çeşme", "241": "Batıkent Metro - Çakırlar - Yuvaköy", "242": "Demetevler Metro - 25 Mart Mah.", "243": "Ergazi KYK - Mesa Metro", "250": "Macunköy Metro - Gimat - Erciyes", "254": "Atapark - Kuşcağız - Meteoroloji Metro", "255": "Atapark - 23 Nisan Mah. - Kuyubaşı Metro", "259": "Atış Cad. - Meteoroloji Metro", "264": "Bağlum - Ufuktepe - Şehitler Metro", "268": "Bağlum - Meteoroloji Metro", "270": "Ufuktepe - Meteoroloji Metro", "271": "Yenimahalle Metro - Şentepe", "274": "Hastane Metro - Karşıyaka - Kayalar", "275": "Hastane Metro - Karşıyaka - Şentepe", "276": "Batıkent Metro - Çakırlar Çiftliği", "283": "Ovacık - Atapark - Şehitler Metro", "287": "Batıkent Metro - Mesutevler", "289": "Ovacık - Piyangotepe - İncirli - Meteoroloji Metro", "290": "Batıkent Metro - Mesa - Modernkent", "291": "Ostim Metro - Jandarma", "292": "Batıkent Metro - İnönü Mah.", "293": "Ostim Metro - Uğur Mumcu Mah. - Jandarma", "294": "Batıkent Metro - Ergazi - İnönü Mah.", "295": "Batıkent Metro - Modernkent - Kardelen", "296": "Batıkent Metro - Ergazi Mah.", "297": "Ostim Metro - Uğur Mumcu", "298": "Batıkent Metro - Yeni Batı Mah.", "299": "Batıkent Metro - İlkyerleşim",
+  "306": "Karapürçek - Beşikkaya - Ankara Hastanesi", "308": "Karapürçek - Cebeci - Dikimevi", "328": "Diriliş - Altınevler - Plevne Cad. - Dikimevi", "346": "Ege Mah. - Dikimevi", "360": "Mutlu Cad. - Okullar Cad. - Dikimevi", "364": "Zirvekent - Ege Mah. - Natoyolu - Dikimevi", "374": "Zerdalitepe - Mamak - Dikimevi", "385": "Peyamisafa - Dikimevi",
+  "401": "AKM Metro - Kazım Karabekir Cad. - Ulus", "405-1": "Aktepe - Dışkapı Metro", "409": "Dışkapı - Etlik Şehir Hastanesi - Akköprü", "412": "Aktepe - Özyurt Cad. - Dutluk Metro", "414": "Aktepe - İvedik Metro", "416": "Aktepe - Kamil Ocak Mah. - Mecidiye Metro", "418-1": "Aktepe - Bursa Cd. - Dışkapı Metro", "430": "Akköprü Metro - Varlık Mah.", "431": "Akköprü Metro - İskitler", "437-1": "Pursaklar - Mimar Sinan Mah. - Dışkapı Metro", "438-1": "Pursaklar - Bağlum - Dışkapı Metro", "440-1": "Pursaklar - Merkez Mah. - Dışkapı Metro", "441-1": "Pursaklar - Karacaören - TOKİ - Dışkapı Metro", "442": "AŞTİ - 15 Temmuz Kızılay Milli İrade Meydanı - Havalimanı", "443-1": "Vakıf Mh. - TOKİ - Dışkapı Metro", "446-1": "Solfasol - Dışkapı Metro", "449": "Akköprü - Millet Kütüphanesi - Çiftlik Kavşağı", "455": "Örnek - Çalışkanlar - Cebeci - Dikimevi", "456-1": "Örnek - Çalışkanlar - Dışkapı Metro", "460": "Uyanış - Pınarbaşı - Şehitler Metro", "461": "Uyanış - Asfalt - Belediye Metro", "468-1": "Akyurt - Kızık Mh. - Dışkapı Metro", "472-1": "AYBÜ - Saray - Dışkapı Metro", "480": "Uyanış - İvedik Metro", "483": "Uyanış - Hacıkadın - Dutluk Metro", "485-1": "Güzelhisar - Altınova - Dışkapı Metro", "487-1": "Çubuk - Dışkapı Metro", "488-1": "Akyurt - Altınova - Dışkapı Metro", "492-1": "Kuzeykent 10. Etap - Ulus - Dışkapı Metro", "493-1": "Kuzeykent - Selçukbey Cd. - Dışkapı Metro", "494-1": "Kuzeykent 16. Etap - Hasköy - Dışkapı Metro", "495": "Aktepe - Kuyubaşı Metro - Dutluk",
+  "507": "Plevne Mah. - Ümitköy Metro", "511": "Sincan - Ümitköy Metro", "512": "Sincan - Ahi Mesud Bulvarı - Koru Metro", "517": "Fatih - Ümitköy Metro", "521": "Fatih (GOP) - Ümitköy Metro", "522": "Koru Metro - Ümitköy Metro - Bilkent Şehir Hastanesi", "524": "Sincan - Polatlı 2. Cadde - Ümitköy Metro", "532": "Elvankent - Ümitköy Metro", "534": "Ahi Mesut Mah. - Koru Metro", "537": "Topçu Mah. - Koru Metro", "538": "Etimesgut - Hikmet Özer Cad. - Ümitköy Metro", "539": "Devlet Mah. Metro - Atakent - Ayyıldız", "541": "Eryaman - Ümitköy Metro", "545": "Eryaman - Güzelkent - Ümitköy Metro", "551": "Sincan Merkez - Eryaman 1-2 Metro", "552": "Elvankent - Eryaman 1-2 Metro", "553": "Etimesgut - Eryaman 1-2 Metro", "558": "İstanbul Yolu Metro - Yeni Batı Mah.", "559": "Koru Metro - Beyler Cad. - Orhan Gazi Bulvarı", "562": "Koru Metro - Bağlıca Mah.", "566": "Sincan - Ahi Mesud Bulvarı - Koru Metro", "567": "Ayyıldız - Ahi Mesud - Koru Metro", "568": "Koru Metro - Bağlıca Bulvarı", "570": "Ümitköy Metro - Ümitköy", "572": "Yenikent - OSB - Törekent Metro", "573": "Yenikent - Ümitköy Metro", "575": "Lalekent - Göksu - Eryaman 1-2 Metro", "576": "Koru Metro - Venüskent - Yaşamkent", "580": "Susuz Mah. - Göksu Mah. - Eryaman 1-2 Metro", "581": "Koru Metro - Organize Sanayi Bölgesi", "582": "Koru Metro - Şehitali Mah.", "583": "Koru Metro - Ballıkuyumcu", "584": "Koru Metro - İncek - Beytepe Devlet Hastanesi", "586": "Koru Metro - Oyak 4 - Alacaatlı", "587": "Koru Metro - Bağlıca Mah. (1. Etap)", "588": "Koru Metro - Yapracık TOKİ", "589": "Koru Metro - Turkuaz Mah.", "590": "Koru Metro - Yaşamkent", "591": "Koru Metro - Temelli", "592": "Koru Metro - Yıldız 88", "593": "Koru Metro - Konutkent - Beyler Cad.", "594": "Koru Metro - Yapracık 1. Bölge", "595": "Koru Metro - Yapracık 2. Bölge", "596": "Koru Metro - Koza Evleri - Türkkonut", "597": "Koru Metro - Bağlıca Mah. (2. Etap)", "598": "Koru Metro - Türkkonut", "606": "OSB Törekent Metro - Yenikent Stadyumu", "607": "Koru Metro - Yargıtay", "611-1": "Sincan - Saraycık TOKİ - Bilkent Metro", "612-1": "Çimşit - Bilkent Metro", "632-1": "Saraycık TOKİ - Elvankent - Bilkent Metro", "641-1": "Eryaman - Bilkent Metro",
+};
+const lineName = code => (routeByCode[code] && routeByCode[code].name) || NAMES[code] || "";
+
 // Road vertices from the basemap, so vehicles without a KML line still sit on a real road
 const ROADPTS = [];
 BASE.primary.concat(BASE.secondary, BASE.trunk).forEach(t => t.split(" ").forEach(q => { const [x, y] = q.split(",").map(Number); ROADPTS.push([x, y]); }));
@@ -480,7 +511,7 @@ REGIONS.forEach((R, ri) => {
     const type = types[idx++];
     const u = rnd();
     const status = u < 0.73 ? "hatta" : u < 0.93 ? "garajda" : u < 0.975 ? "cevrimdisi" : "bakim";
-    const v = { kapi, plate, type, region: R.n, ip: "10." + (20 + R.n) + "." + Math.floor(k / 250) + "." + (k % 250 + 2), status, route: null, code: null, t: 0, speed: 0, src: "gps", lat: 0, lon: 0, issues: [], lastSeen: 0 };
+    const v = { dir: rnd() < 0.5 ? "gidis" : "donus", kapi, plate, type, region: R.n, ip: "10." + (20 + R.n) + "." + Math.floor(k / 250) + "." + (k % 250 + 2), status, route: null, code: null, t: 0, speed: 0, src: "gps", lat: 0, lon: 0, issues: [], lastSeen: 0 };
     if (status === "hatta" || status === "cevrimdisi") {
       if (R.kml.length && rnd() < 0.22) { v.route = routeByCode[pick(R.kml)]; v.code = v.route.code; v.t = rnd(); [v.lat, v.lon] = posOnRoute(v.route, v.t); }
       else {
@@ -583,7 +614,7 @@ const agoText = m => m < 60 ? m + " dk önce" : m < 1440 ? Math.floor(m / 60) + 
 const atText = m => { const d = new Date(now.getTime() - m * 60000); const day = m >= 1440 ? d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" }) + " " : ""; return day + d.toTimeString().slice(0, 5); };
 
 /* ---------- State ---------- */
-const st = { view: "harita", region: 0, sel: null, show: { ok: false, est: true, off: true, gar: false }, wopen: false, groups: new Set(), watched: new Set(["288"]), gpsTab: "loss", rows: 80, ftype: "", fstat: "", fver: "", fq: "", vb: [0, 0, W, H], alertFilter: "" };
+const st = { view: "harita", region: 0, sel: null, show: { ok: false, est: false, off: false, gar: false, iss: false }, wopen: false, groups: new Set(), watched: new Set(), gpsTab: "loss", rows: 80, ftype: "", fstat: "", fver: "", fq: "", vb: [0, 0, W, H], alertFilter: "" };
 const inRegion = v => !st.region || v.region === st.region;
 
 /* ---------- Map ---------- */
@@ -633,7 +664,7 @@ function drawBuses() {
   V.forEach(v => {
     const [x, y] = P(v.lat, v.lon);
     const cls = busClass(v);
-    const always = v === st.sel || v.issues.length > 0 || (v.status === "hatta" && isWatched(v));
+    const always = v === st.sel || (v.status === "hatta" && isWatched(v)) || (st.show.iss && v.issues.length > 0);
     const hidden = !st.show[cls] && !always;
     const dim = (st.region && v.region !== st.region) || st.view === "gps";
     v.node.setAttribute("cx", x); v.node.setAttribute("cy", y);
@@ -648,7 +679,7 @@ function drawBuses() {
   });
   drawSel();
 }
-function isWatched(v) { if (v.route && st.watched.has(v.route.code)) return true; for (const id of st.groups) if (inGroup(v, GROUPS.find(g => g.id === id))) return true; return false; }
+function isWatched(v) { if (st.watched.has(v.code)) return true; for (const id of st.groups) if (inGroup(v, GROUPS.find(g => g.id === id))) return true; return false; }
 function drawWatch() {
   L.wrings.textContent = "";
   if (st.view !== "harita") return;
@@ -722,8 +753,9 @@ function fitBounds(pts, pad = 0.18) {
   x0 -= w * pad; y0 -= h * pad; setVB([x0, y0, w * (1 + 2 * pad), h * (1 + 2 * pad)]);
 }
 function fitRegion() {
-  const vs = V.filter(v => (!st.region || v.region === st.region) && v.status !== "garajda" && v.status !== "bakim");
-  fitBounds(vs.map(v => P(v.lat, v.lon)), st.region ? 0.08 : 0.04);
+  const Rs = st.region ? [REGIONS[st.region - 1]] : REGIONS;
+  const pts = []; Rs.forEach(R => { R.anchors.forEach(a => pts.push(P(a[0], a[1]))); pts.push(P(R.garage[0], R.garage[1])); });
+  fitBounds(pts, st.region ? 0.12 : 0.06);
 }
 function zoomAt(f, cx, cy) {
   const [x, y, w, h] = st.vb; const nw = Math.max(25, Math.min(W * 1.4, w * f)), nh = nw * h / w;
@@ -770,32 +802,50 @@ function renderRail() {
     <div class="kpi"><b style="color:var(--crit)">${c.bad}</b><span>Sorunlu</span></div>
     <div class="kpi"><b>${loss24}</b><span>GPS kaybı · 24 sa</span></div></div>`;
   rail.innerHTML = h;
-  rail.querySelectorAll(".region").forEach(b => b.onclick = () => { st.region = +b.dataset.r; st.rows = 80; st.wopen = false; renderAll(true); });
+  rail.querySelectorAll(".region").forEach(b => b.onclick = () => setRegion(+b.dataset.r));
 }
 
 /* ---------- Map overlays ---------- */
-function renderWatch() {
-  const where = $("#where"), ww = $("#wwrap");
-  if (st.view !== "harita" && st.view !== "gps") return;
-  const vs = V.filter(inRegion), hat = vs.filter(v => v.status === "hatta").length, bad = vs.filter(v => sevOf(v) === "crit" || sevOf(v) === "high").length;
-  const hiddenOk = st.show.ok ? 0 : vs.filter(v => busClass(v) === "ok" && !v.issues.length && !isWatched(v)).length;
-  where.innerHTML = `<b>${st.region ? REGIONS[st.region - 1].name + " · " + esc(REGIONS[st.region - 1].place) : "Ankara · 5 bölge"}</b><span>${fmt(hat)} araç hatta${bad ? ` · <span style="color:var(--crit);font-weight:600">${bad} sorunlu</span>` : ""}</span>${hiddenOk ? `<span>Haritada yalnız sorunlu ve izlenen araçlar. GPS'i normal ${fmt(hiddenOk)} araç gizli.</span>` : ""}`;
-  if (st.view !== "harita") { ww.hidden = true; return; }
-  ww.hidden = false;
-  const list = ROUTES.filter(r => !st.region || r.region === st.region);
-  const nv = V.filter(v => v.status === "hatta" && inRegion(v) && isWatched(v)).length;
-  const gcount = g => V.filter(v => v.status === "hatta" && inRegion(v) && inGroup(v, g)).length;
-  ww.innerHTML = `<button class="wbtn" id="wbtn" aria-expanded="${st.wopen}"><i></i>Hat izle${nv ? ` · ${nv} araç` : ""} <span aria-hidden="true">▾</span></button>` +
-    (st.wopen ? `<div class="wpop" role="dialog" aria-label="Özel izleme"><h5>Hat grupları</h5>${GROUPS.map(g => `<label class="g"><input type="checkbox" data-g="${g.id}" ${st.groups.has(g.id) ? "checked" : ""}><span>${esc(g.name)}<small>${esc(g.note)}</small></span><em>${gcount(g)}</em></label>`).join("")}<h5>Güzergâhı çizilen hatlar</h5>${list.map(r => `<label><input type="checkbox" data-c="${r.code}" ${st.watched.has(r.code) ? "checked" : ""}><b class="mono">${r.code}</b><span title="${esc(r.name)}">${esc(r.name)}</span></label>`).join("") || `<p style="margin:8px;color:var(--muted)">Bu bölgede KML'i olan hat yok.</p>`}</div>` : "");
-  $("#wbtn").onclick = e => { e.stopPropagation(); st.wopen = !st.wopen; renderWatch(); };
-  ww.querySelectorAll("input[data-c]").forEach(c => c.onchange = () => { const k = c.dataset.c; c.checked ? st.watched.add(k) : st.watched.delete(k); watchChanged(k); });
-  ww.querySelectorAll("input[data-g]").forEach(c => c.onchange = () => { const k = c.dataset.g; c.checked ? st.groups.add(k) : st.groups.delete(k); watchChanged(); });
+const dirOf = v => v.route ? (v.t < 0.5 ? "gidis" : "donus") : v.dir;
+function lineRows(vs) {
+  const m = {};
+  vs.forEach(v => { if (v.status !== "hatta" || !v.code) return; const r = m[v.code] = m[v.code] || { code: v.code, n: 0, go: 0, back: 0, est: 0, iss: 0 }; r.n++; dirOf(v) === "gidis" ? r.go++ : r.back++; if (v.src === "est") r.est++; if (v.issues.length) r.iss++; });
+  return Object.values(m).sort((a, b) => b.n - a.n || (a.code > b.code ? 1 : -1));
 }
-document.addEventListener("click", e => { if (st.wopen && !e.target.closest("#wwrap")) { st.wopen = false; renderWatch(); } });
+function renderWatch() {
+  const box = $("#lines");
+  if (st.view !== "harita") { box.hidden = true; return; }
+  box.hidden = false;
+  const vs = V.filter(inRegion), hat = vs.filter(v => v.status === "hatta").length;
+  const prob = (r) => `${r.est ? `<span class="warn">${r.est} GPS kopuk</span>` : ""}${r.iss ? `<span class="bad">${r.iss} uyarı</span>` : ""}`;
+  let head, cols, rows;
+  if (!st.region) {
+    head = `<b>Ankara · 5 bölge</b><span>${fmt(hat)} otobüs hatta. Bir bölge seçin.</span>`;
+    cols = `<div class="lines-cols"><span>Bölge</span><span>Garaj</span><span style="text-align:right">Hatta</span></div>`;
+    rows = REGIONS.map(R => { const rv = V.filter(v => v.region === R.n && v.status === "hatta"); const est = rv.filter(v => v.src === "est").length, iss = rv.filter(v => v.issues.length).length, lines = new Set(rv.map(v => v.code)).size;
+      return `<button class="lrow" data-r="${R.n}"><span class="code">${R.n}. Bölge</span><span class="nm">${esc(R.place)}</span><span class="cnt">${rv.length}</span><span class="sub">${lines} hat ${prob({ est, iss })}</span></button>`; }).join("");
+  } else {
+    const R = REGIONS[st.region - 1], L = lineRows(vs);
+    head = `<b>${R.name} · ${esc(R.place)}</b><span>${fmt(hat)} otobüs, ${L.length} hatta sefer yapıyor</span>
+      <div class="chips">${GROUPS.filter(g => V.some(v => v.region === R.n && inGroup(v, g) && v.status === "hatta")).map(g => `<button data-g="${g.id}" aria-pressed="${st.groups.has(g.id)}">${esc(g.name)}</button>`).join("")}</div>
+      ${st.watched.size || st.groups.size ? `<button class="clear" id="clearW">Haritayı temizle</button>` : ""}`;
+    cols = `<div class="lines-cols"><span>Hat</span><span>Güzergâh · gidiş / dönüş</span><span style="text-align:right">Araç</span></div>`;
+    rows = L.map(r => `<button class="lrow" data-c="${esc(r.code)}" aria-pressed="${st.watched.has(r.code)}"><span class="code">${esc(r.code)}</span><span class="nm" title="${esc(lineName(r.code))}">${esc(lineName(r.code)) || "—"}</span><span class="cnt">${r.n}</span><span class="sub"><span class="dbar"><i style="width:${r.go / r.n * 100}%;background:var(--accent)"></i><i style="width:${r.back / r.n * 100}%;background:var(--route)"></i></span>${r.go} gidiş · ${r.back} dönüş ${prob(r)}</span></button>`).join("") || `<p style="padding:14px;margin:0;color:var(--muted)">Bu bölgede sefer yapan otobüs yok.</p>`;
+  }
+  box.innerHTML = `<div class="lines-h">${head}</div>${cols}<div class="lines-list">${rows}</div>`;
+  box.querySelectorAll(".lrow[data-r]").forEach(b => b.onclick = () => setRegion(+b.dataset.r));
+  box.querySelectorAll(".lrow[data-c]").forEach(b => b.onclick = () => { const c = b.dataset.c; if (st.watched.has(c)) st.watched.delete(c); else { st.watched.clear(); st.watched.add(c); } st.sel = null; watchChanged(st.watched.has(c) ? c : null); });
+  box.querySelectorAll(".chips button").forEach(b => b.onclick = () => { const k = b.dataset.g; st.groups.has(k) ? st.groups.delete(k) : st.groups.add(k); st.sel = null; watchChanged(); });
+  const cl = $("#clearW", box); if (cl) cl.onclick = () => { st.watched.clear(); st.groups.clear(); st.sel = null; watchChanged(); };
+}
+function setRegion(n) { st.region = n; st.rows = 80; st.wopen = false; st.watched.clear(); st.groups.clear(); st.sel = null; renderAll(true); }
 function watchChanged(code) {
-  renderWatch(); drawBuses(); if (!st.sel) renderSide();
+  renderWatch(); renderLegend(); drawBuses(); renderSide();
+  const vs = V.filter(v => v.status === "hatta" && inRegion(v) && isWatched(v));
   const r = code && routeByCode[code];
-  if (r && st.watched.has(code)) fitBounds(r.pts.map(p => P(p[0], p[1])), 0.08);
+  if (r) fitBounds(r.pts.map(p => P(p[0], p[1])), 0.08);
+  else if (vs.length) fitBounds(vs.map(v => P(v.lat, v.lon)), 0.15);
+  else fitRegion();
 }
 function renderLegend() {
   const lg = $("#legend");
@@ -806,8 +856,8 @@ function renderLegend() {
     return;
   }
   const vs = V.filter(inRegion), c = k => vs.filter(v => busClass(v) === k).length;
-  const items = [["est", "GPS kopuk", "var(--est)"], ["off", "Çevrimdışı", "var(--off)"], ["ok", "GPS normal", "var(--ok)"], ["gar", "Garajda", "var(--off)"]];
-  lg.innerHTML = items.map(([k, n, col]) => `<button aria-pressed="${st.show[k]}" data-s="${k}" title="Haritada göster / gizle"><i class="dot" style="background:${col}${k === "gar" ? ";opacity:.55" : ""}"></i>${n} <b>${fmt(c(k))}</b></button>`).join("") + `<span class="static"><i class="dot" style="border:2px solid var(--crit);background:transparent"></i>Sorun</span><span class="static"><i class="dot" style="border:2px solid var(--mark);background:transparent"></i>Özel izlenen</span>`;
+  const items = [["est", "GPS kopuk", "var(--est)", c("est")], ["off", "Çevrimdışı", "var(--off)", c("off")], ["iss", "Uyarılı", "var(--crit)", vs.filter(v => v.issues.length).length], ["ok", "GPS normal", "var(--ok)", c("ok")], ["gar", "Garajda", "var(--off)", c("gar")]];
+  lg.innerHTML = `<span class="static">Haritada göster:</span>` + items.map(([k, n, col, cnt]) => `<button aria-pressed="${st.show[k]}" data-s="${k}"><i class="dot" style="background:${col}${k === "gar" ? ";opacity:.55" : ""}"></i>${n} <b>${fmt(cnt)}</b></button>`).join("");
   lg.querySelectorAll("button").forEach(b => b.onclick = () => { st.show[b.dataset.s] = !st.show[b.dataset.s]; renderLegend(); drawRegions(); drawBuses(); });
 }
 
@@ -837,8 +887,8 @@ function watchLists() {
 }
 function watchHTML() {
   const lists = watchLists();
-  if (!lists.length) return `<h3>İzlenen hatlar</h3><p style="margin:0;color:var(--muted);font-size:13px">Haritadaki "Hat izle" düğmesinden bir hat seçin. Hattın yolu çizilir, o hattaki otobüsler burada listelenir.</p>`;
-  return `<h3>İzlenen hatlar <small>${lists.reduce((n, l) => n + l.vs.length, 0)} araç</small></h3>` + lists.map(l => `
+  if (!lists.length) return `<h3>Seçili hat</h3><p style="margin:0;color:var(--muted);font-size:13px">${st.region ? "Haritadaki listeden bir hat seçin. O hattaki otobüsler haritada ve burada görünür." : "Önce bir bölge seçin, sonra hat listesinden bir hat."}</p>`;
+  return `<h3>Seçili hat <small>${lists.reduce((n, l) => n + l.vs.length, 0)} araç</small></h3>` + lists.map(l => `
     <div class="wl">
       <div class="wlh">${l.code ? `<b class="mono">${l.code}</b>` : ""}<span>${esc(l.title)}</span><button type="button" class="wx" data-un="${l.key}" aria-label="İzlemeyi bırak">Bırak</button></div>
       ${l.vs.length ? `<div class="wrows">${l.vs.slice(0, 14).map(v => {
@@ -1127,7 +1177,7 @@ function useGoogle() {
     { featureType: "road", elementType: "labels.icon", stylers: [{ visibility: "off" }] },
     { featureType: "water", elementType: "geometry", stylers: [{ color: "#10242d" }] },
   ];
-  const map = new g.Map(box, { center: { lat: 39.93, lng: 32.80 }, zoom: 11, disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false, styles: dark ? DARK : LIGHT });
+  const map = new g.Map(box, { center: { lat: 39.93, lng: 32.80 }, zoom: 11, disableDefaultUI: true, gestureHandling: "greedy", clickableIcons: false, styles: LIGHT });
   const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
   const c = { ok: css("--ok"), est: css("--est"), off: css("--off"), gar: css("--off"), crit: css("--crit"), mark: css("--mark"), accent: css("--accent"), ink: css("--ink"), panel: css("--panel") };
   const LL = (lat, lon) => ({ lat, lng: lon });
@@ -1142,7 +1192,7 @@ function useGoogle() {
   drawBuses = function () {
     V.forEach(v => {
       const cls = busClass(v);
-      const always = v === st.sel || v.issues.length > 0 || (v.status === "hatta" && isWatched(v));
+      const always = v === st.sel || (v.status === "hatta" && isWatched(v)) || (st.show.iss && v.issues.length > 0);
       const show = st.view === "harita" && (st.show[cls] || always) && !(st.region && v.region !== st.region);
       if (!show) { if (v.gm) v.gm.setVisible(false); return; }
       const sv = sevOf(v);
