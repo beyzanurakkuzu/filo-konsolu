@@ -125,7 +125,10 @@ button { cursor: pointer; }
 .lrow .sub { grid-column: 2 / 4; display: flex; gap: 8px; align-items: center; font-size: 11.5px; color: var(--muted); }
 .lrow .dbar { flex: 1; height: 5px; border-radius: 3px; background: var(--panel-2); display: flex; overflow: hidden; max-width: 90px; }
 .lrow .dbar i { display: block; height: 100%; }
-.lrow .warn { color: var(--est); font-weight: 600; } .lrow .bad { color: var(--crit); font-weight: 600; }
+.lrow .warn { color: var(--est); font-weight: 600; }
+.ltabs { display: flex; gap: 4px; margin-top: 8px; }
+.ltabs button { flex: 1; border: 1px solid var(--line); background: var(--panel); border-radius: 7px; padding: 5px 8px; font-size: 13px; font-weight: 500; }
+.ltabs button[aria-selected="true"] { background: var(--ink); color: var(--panel); border-color: var(--ink); } .lrow .bad { color: var(--crit); font-weight: 600; }
 @media (max-width: 860px) { .lines { max-height: 46%; } }
 .gml { text-shadow: 0 0 3px var(--panel), 0 0 3px var(--panel), 0 0 2px var(--panel); white-space: nowrap; }
 .maptools { position: absolute; right: 10px; top: 10px; display: grid; gap: 4px; }
@@ -260,6 +263,25 @@ button { cursor: pointer; }
 .timeline div { display: grid; grid-template-columns: 44px 10px 1fr; gap: 8px; align-items: start; }
 .timeline time { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
 .timeline i { width: 8px; height: 8px; border-radius: 50%; margin-top: 5px; }
+.tstats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tstats .hcell b { font-size: 13.5px; }
+.lnk { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; font-family: var(--mono); font-weight: 600; text-decoration: underline; }
+.strip { display: grid; }
+.srow { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 6px 5px 0; position: relative; font-size: 13px; }
+.srow::before { content: ""; position: absolute; left: 9px; top: 0; bottom: 0; width: 2px; background: var(--line); }
+.srow:first-child::before { top: 50%; } .srow:last-child::before { bottom: 50%; }
+.srow .sd { width: 10px; height: 10px; border-radius: 50%; background: var(--panel); border: 2px solid var(--accent); justify-self: center; position: relative; z-index: 1; }
+.srow.passed .sd { background: var(--off); border-color: var(--off); }
+.srow.passed .nm, .srow.passed .eta { color: var(--muted); }
+.srow.next .sd { width: 14px; height: 14px; background: var(--mark); border-color: var(--ink); }
+.srow.next .nm { font-weight: 600; }
+.srow.bus { background: var(--accent-soft); border-radius: 6px; }
+.srow.bus .sd { width: 14px; height: 14px; border-radius: 4px; background: var(--accent); border-color: var(--accent); }
+.srow .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srow .eta { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+.srow.next .eta { color: var(--ink); font-weight: 600; }
+.oth { font-family: var(--mono); font-size: 11px; border: 1px solid var(--line); background: var(--panel-2); border-radius: 4px; padding: 0 5px; margin-left: 6px; color: var(--ink); }
+#follow[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
 .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .btn { border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 8px 10px; font-weight: 500; text-align: left; font-size: 13px; }
 .btn:hover:not(:disabled) { border-color: var(--accent); }
@@ -304,12 +326,31 @@ tbody tr.on { background: var(--accent-soft); }
 .prog { height: 6px; background: var(--panel-2); border-radius: 3px; overflow: hidden; }
 .prog i { display: block; height: 100%; background: var(--accent); }
 .stage-c.done .prog i { background: var(--ok); }
+.stage-c small:last-child { font-size: 11.5px; }
 .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 .box { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: grid; gap: 10px; align-content: start; }
 .box h4 { margin: 0; font-family: var(--display); font-size: 16px; font-weight: 600; }
 .vbar { display: grid; grid-template-columns: 110px 1fr 54px; gap: 8px; align-items: center; font-size: 12.5px; }
 .vbar .track { height: 10px; background: var(--panel-2); border-radius: 3px; overflow: hidden; display: flex; }
 .vbar .track i { display: block; height: 100%; }
+.rel { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 12px; }
+.relh { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; }
+.relh > div:first-child { display: grid; gap: 2px; }
+.relh small { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; }
+.relh b { font-family: var(--display); font-size: 24px; font-weight: 700; line-height: 1.1; }
+.relh span { color: var(--muted); font-size: 13px; }
+.relact { display: flex; gap: 6px; flex-wrap: wrap; }
+.relact .btn small { display: block; }
+.btn.danger { border-color: var(--crit); color: var(--crit); }
+.notes { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13px; }
+.meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+.confirm { border: 1px solid var(--warn); background: var(--panel-2); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; font-size: 13px; }
+.confirm div { display: flex; gap: 6px; }
+.legend2 { display: flex; flex-wrap: wrap; gap: 4px; }
+.legend2 button { border: 1px solid var(--line); background: var(--panel); border-radius: 999px; padding: 3px 10px; font-size: 12px; display: flex; gap: 6px; align-items: center; }
+.legend2 button[aria-pressed="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.box .m { margin: 0; font-size: 13px; color: var(--muted); }
+.box .m b { color: var(--ink); }
 .rules { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 13px; }
 .metric { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-top: 1px solid var(--line); }
 .metric:first-of-type { border-top: 0; }
@@ -522,7 +563,18 @@ REGIONS.forEach((R, ri) => {
 // a few more vehicles on the airport line so the group is visible
 V.filter(v => v.region === 4 && v.status === "hatta" && !v.route).slice(0, 9).forEach(v => { v.code = "442"; const p = pick(AIR_POOL); [v.lat, v.lon] = UNP(p[0], p[1]); });
 // rollout: 492 vehicles on 1.4.1 regardless of region
-shuffle(V.slice()).forEach((v, i) => { v.panel = i < 492 ? "1.4.1" : i < 492 + 1380 ? "1.4.0" : "1.3.2"; });
+// Kademeli yayın: BusPanel 1.4.0 -> 1.4.1, şu an %25 aşaması (508 araç hedef)
+const STAGES = [{ name: "Pilot", n: 10, done: true }, { name: "%5", n: 102, done: true }, { name: "%25", n: 508, run: true }, { name: "Tüm filo", n: 2032 }];
+const UPD_LABEL = { ok: ["Kuruldu · sağlıklı", "ok"], wait: ["İndirildi · sefer bitince kurulacak", "accent"], dl: ["İndiriliyor", "accent"], queued: ["Sırada · araç çevrimdışı", "off"], err: ["Hata", "crit"], rb: ["Geri alındı", "warn"], next: ["Sonraki aşamada", "off"] };
+const ERRS = ["SHA-256 uyuşmadı, yeniden indirilecek", "Disk dolu (%96), önbellek temizlenmeli", "İndirme yarıda kesildi (SIM sinyali zayıf)"];
+{
+  const order = shuffle(V.slice()), target = order.slice(0, 508);
+  let k = 0;
+  [["ok", 380], ["wait", 74], ["dl", 31], ["queued", 15], ["err", 6], ["rb", 2]].forEach(([u, n]) => { for (let j = 0; j < n; j++) { const v = target[k++]; v.upd = u; v.panel = u === "ok" ? "1.4.1" : "1.4.0"; v.updAgo = u === "ok" ? 60 + Math.floor(rnd() * 2800) : 5 + Math.floor(rnd() * 400); if (u === "err") v.updNote = ERRS[j % ERRS.length]; if (u === "rb") v.updNote = "5 dk içinde sağlıklı bildirimi gelmedi, 1.4.0'a dönüldü"; } });
+  order.slice(508).forEach((v, i) => { v.upd = "next"; v.panel = i < 160 ? "1.3.2" : "1.4.0"; v.updAgo = 0; });
+}
+const BAKIM = ["Periyodik bakım", "Lastik değişimi", "Klima arızası", "Kaporta onarımı", "Fren kontrolü"];
+V.forEach(v => { if (v.status === "garajda") v.garMin = 20 + Math.floor(rnd() * 600); if (v.status === "bakim") { v.garMin = 300 + Math.floor(rnd() * 4000); v.bakim = pick(BAKIM); } });
 const byKapi = Object.fromEntries(V.map(v => [v.kapi, v]));
 
 // Crafted vehicles for the scenarios
@@ -535,7 +587,7 @@ function craft(kapi, region, code, set) {
 }
 const v5317 = craft(5317, 5, "505", { status: "hatta", type: "K", speed: 34, src: "gps" });
 const v5142 = craft(5142, 5, "505", { status: "hatta", type: "S", speed: 27, src: "est" });
-const v2208 = craft(2208, 2, "288", { status: "hatta", type: "S", speed: 0, panel: "1.4.1" });
+const v2208 = craft(2208, 2, "288", { status: "hatta", type: "S", speed: 0, panel: "1.4.1", upd: "ok", updAgo: 900 });
 const v3390 = craft(3390, 3, "350", { status: "hatta", type: "K", speed: 22 });
 const v4410 = craft(4410, 4, "411-7", { status: "hatta", type: "K", speed: 18 });
 let v1127 = byKapi[1127];
@@ -603,7 +655,7 @@ const agoText = m => m < 60 ? m + " dk önce" : m < 1440 ? Math.floor(m / 60) + 
 const atText = m => { const d = new Date(now.getTime() - m * 60000); const day = m >= 1440 ? d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" }) + " " : ""; return day + d.toTimeString().slice(0, 5); };
 
 /* ---------- State ---------- */
-const st = { view: "harita", region: 0, sel: null, show: { ok: false, est: false, off: false, gar: false, iss: false }, wopen: false, groups: new Set(), watched: new Set(), gpsTab: "loss", rows: 80, ftype: "", fstat: "", fver: "", fq: "", vb: [0, 0, W, H], alertFilter: "" };
+const st = { view: "harita", region: 0, sel: null, show: { ok: false, est: false, off: false, gar: false, iss: false }, wopen: false, ltab: "lines", follow: true, updFilter: "", updRows: 40, updConfirm: "", groups: new Set(), watched: new Set(), gpsTab: "loss", rows: 80, ftype: "", fstat: "", fver: "", fq: "", vb: [0, 0, W, H], alertFilter: "" };
 const inRegion = v => !st.region || v.region === st.region;
 
 /* ---------- Map ---------- */
@@ -653,7 +705,7 @@ function drawBuses() {
   V.forEach(v => {
     const [x, y] = P(v.lat, v.lon);
     const cls = busClass(v);
-    const always = v === st.sel || (v.status === "hatta" && isWatched(v)) || (st.show.iss && v.issues.length > 0);
+    const always = v === st.sel || (v.status === "hatta" && isWatched(v)) || (st.show.iss && v.issues.length > 0) || (st.ltab === "garage" && st.region === v.region && (v.status === "garajda" || v.status === "bakim"));
     const hidden = !st.show[cls] && !always;
     const dim = (st.region && v.region !== st.region) || st.view === "gps";
     v.node.setAttribute("cx", x); v.node.setAttribute("cy", y);
@@ -741,6 +793,7 @@ function fitBounds(pts, pad = 0.18) {
   const w = Math.max(60, x1 - x0), h = Math.max(40, y1 - y0);
   x0 -= w * pad; y0 -= h * pad; setVB([x0, y0, w * (1 + 2 * pad), h * (1 + 2 * pad)]);
 }
+function followTo(v) { const [x, y] = P(v.lat, v.lon), w = st.vb[2], h = st.vb[3]; setVB([x - w / 2, y - h / 2, w, h]); }
 function fitRegion() {
   const Rs = st.region ? [REGIONS[st.region - 1]] : REGIONS;
   const pts = []; Rs.forEach(R => { R.anchors.forEach(a => pts.push(P(a[0], a[1]))); pts.push(P(R.garage[0], R.garage[1])); });
@@ -806,28 +859,34 @@ function renderWatch() {
   if (st.view !== "harita") { box.hidden = true; return; }
   box.hidden = false;
   const vs = V.filter(inRegion), hat = vs.filter(v => v.status === "hatta").length;
+  const garV = vs.filter(v => v.status === "garajda" || v.status === "bakim");
   const prob = (r) => `${r.est ? `<span class="warn">${r.est} GPS kopuk</span>` : ""}${r.iss ? `<span class="bad">${r.iss} uyarı</span>` : ""}`;
   let head, cols, rows;
   if (!st.region) {
     head = `<b>Ankara · 5 bölge</b><span>${fmt(hat)} otobüs hatta. Bir bölge seçin.</span>`;
     cols = `<div class="lines-cols"><span>Bölge</span><span>Garaj</span><span style="text-align:right">Hatta</span></div>`;
     rows = REGIONS.map(R => { const rv = V.filter(v => v.region === R.n && v.status === "hatta"); const est = rv.filter(v => v.src === "est").length, iss = rv.filter(v => v.issues.length).length, lines = new Set(rv.map(v => v.code)).size;
-      return `<button class="lrow" data-r="${R.n}"><span class="code">${R.n}. Bölge</span><span class="nm">${esc(R.place)}</span><span class="cnt">${rv.length}</span><span class="sub">${lines} hat ${prob({ est, iss })}</span></button>`; }).join("");
+      const gar = V.filter(v => v.region === R.n && (v.status === "garajda" || v.status === "bakim")).length;
+      return `<button class="lrow" data-r="${R.n}"><span class="code">${R.n}. Bölge</span><span class="nm">${esc(R.place)}</span><span class="cnt">${rv.length}</span><span class="sub">${lines} hat · ${gar} garajda ${prob({ est, iss })}</span></button>`; }).join("");
   } else {
     const R = REGIONS[st.region - 1], L = lineRows(vs);
     head = `<b>${R.name} · ${esc(R.place)}</b><span>${fmt(hat)} otobüs, ${L.length} hatta sefer yapıyor</span>
       <div class="chips">${GROUPS.filter(g => V.some(v => v.region === R.n && inGroup(v, g) && v.status === "hatta")).map(g => `<button data-g="${g.id}" aria-pressed="${st.groups.has(g.id)}">${esc(g.name)}</button>`).join("")}</div>
-      ${st.watched.size || st.groups.size ? `<button class="clear" id="clearW">Haritayı temizle</button>` : ""}`;
-    cols = `<div class="lines-cols"><span>Hat</span><span>Güzergâh · gidiş / dönüş</span><span style="text-align:right">Araç</span></div>`;
-    rows = L.map(r => `<button class="lrow" data-c="${esc(r.code)}" aria-pressed="${st.watched.has(r.code)}"><span class="code">${esc(r.code)}</span><span class="nm" title="${esc(lineName(r.code))}">${esc(lineName(r.code)) || "—"}</span><span class="cnt">${r.n}</span><span class="sub"><span class="dbar"><i style="width:${r.go / r.n * 100}%;background:var(--accent)"></i><i style="width:${r.back / r.n * 100}%;background:var(--route)"></i></span>${r.go} gidiş · ${r.back} dönüş ${prob(r)}</span></button>`).join("") || `<p style="padding:14px;margin:0;color:var(--muted)">Bu bölgede sefer yapan otobüs yok.</p>`;
+      ${st.watched.size || st.groups.size ? `<button class="clear" id="clearW">Haritayı temizle</button>` : ""}
+      <div class="ltabs" role="tablist"><button role="tab" data-t="lines" aria-selected="${st.ltab === "lines"}">Hatlar · ${L.length}</button><button role="tab" data-t="garage" aria-selected="${st.ltab === "garage"}">Garajda · ${garV.length}</button></div>`;
+    cols = st.ltab === "garage" ? `<div class="lines-cols"><span>Kapı no</span><span>Durum · ne zamandır</span><span style="text-align:right">Tip</span></div>` : `<div class="lines-cols"><span>Hat</span><span>Güzergâh · gidiş / dönüş</span><span style="text-align:right">Araç</span></div>`;
+    rows = st.ltab === "garage" ? garV.slice().sort((a, b) => (b.status === "bakim") - (a.status === "bakim") || b.garMin - a.garMin).map(v => `<button class="lrow${st.sel === v ? " on" : ""}" data-k="${v.kapi}" aria-pressed="${st.sel === v}"><span class="code">${v.kapi}</span><span class="nm">${v.status === "bakim" ? `<b style="color:var(--warn)">Bakımda</b> · ${esc(v.bakim)}` : "Garajda"}</span><span class="cnt" style="font-size:13px;font-family:var(--body);font-weight:500">${v.type === "K" ? "Körüklü" : "Solo"}</span><span class="sub">${durText(v.garMin)} · BusPanel ${v.panel}${v.upd === "wait" || v.upd === "dl" || v.upd === "queued" ? ` · <span class="warn">güncelleme bekliyor</span>` : v.upd === "err" ? ` · <span class="bad">güncelleme hatası</span>` : ""}</span></button>`).join("") || `<p style="padding:14px;margin:0;color:var(--muted)">Garajda araç yok.</p>` : L.map(r => `<button class="lrow" data-c="${esc(r.code)}" aria-pressed="${st.watched.has(r.code)}"><span class="code">${esc(r.code)}</span><span class="nm" title="${esc(lineName(r.code))}">${esc(lineName(r.code)) || "—"}</span><span class="cnt">${r.n}</span><span class="sub"><span class="dbar"><i style="width:${r.go / r.n * 100}%;background:var(--accent)"></i><i style="width:${r.back / r.n * 100}%;background:var(--route)"></i></span>${r.go} gidiş · ${r.back} dönüş ${prob(r)}</span></button>`).join("") || `<p style="padding:14px;margin:0;color:var(--muted)">Bu bölgede sefer yapan otobüs yok.</p>`;
   }
   box.innerHTML = `<div class="lines-h">${head}</div>${cols}<div class="lines-list">${rows}</div>`;
   box.querySelectorAll(".lrow[data-r]").forEach(b => b.onclick = () => setRegion(+b.dataset.r));
+  box.querySelectorAll(".lrow[data-k]").forEach(b => b.onclick = () => { const v = byKapi[+b.dataset.k]; select(v, false); const [x, y] = P(v.lat, v.lon); setVB([x - 4, y - 3, 8, 6]); renderWatch(); });
+  box.querySelectorAll(".ltabs button").forEach(b => b.onclick = () => { st.ltab = b.dataset.t; st.sel = null; st.watched.clear(); st.groups.clear(); renderWatch(); renderSide(); drawBuses(); if (st.ltab === "garage") { const g = REGIONS[st.region - 1].garage, [x, y] = P(g[0], g[1]); setVB([x - 6, y - 4, 12, 8]); } else fitRegion(); });
   box.querySelectorAll(".lrow[data-c]").forEach(b => b.onclick = () => { const c = b.dataset.c; if (st.watched.has(c)) st.watched.delete(c); else { st.watched.clear(); st.watched.add(c); } st.sel = null; watchChanged(st.watched.has(c) ? c : null); });
   box.querySelectorAll(".chips button").forEach(b => b.onclick = () => { const k = b.dataset.g; st.groups.has(k) ? st.groups.delete(k) : st.groups.add(k); st.sel = null; watchChanged(); });
   const cl = $("#clearW", box); if (cl) cl.onclick = () => { st.watched.clear(); st.groups.clear(); st.sel = null; watchChanged(); };
 }
-function setRegion(n) { st.region = n; st.rows = 80; st.wopen = false; st.watched.clear(); st.groups.clear(); st.sel = null; renderAll(true); }
+const durText = m => m < 60 ? m + " dk" : m < 1440 ? Math.floor(m / 60) + " sa " + (m % 60) + " dk" : Math.floor(m / 1440) + " gün " + Math.floor(m % 1440 / 60) + " sa";
+function setRegion(n) { st.region = n; st.rows = 80; st.wopen = false; st.ltab = "lines"; st.watched.clear(); st.groups.clear(); st.sel = null; renderAll(true); }
 function watchChanged(code) {
   renderWatch(); renderLegend(); drawBuses(); renderSide();
   const vs = V.filter(v => v.status === "hatta" && inRegion(v) && isWatched(v));
@@ -926,6 +985,7 @@ function renderDetail(side, v) {
       <div class="ipbox"><div><small>SIM sabit IP · HTTPS (VPN)</small><span class="ip">${v.ip}</span></div><button type="button" id="cpip">Kopyala</button></div>
       ${v.issues.map(alertHTML).join("")}
     </div>
+    ${v.route && v.status === "hatta" ? `<div class="sec" id="trk">${trackHTML(v)}</div>` : ""}
     <div class="sec"><h3>Hat ve konum</h3>
       <dl class="kv">
         <dt>Hat</dt><dd>${v.code ? `<b class="mono">${v.code}</b> ${esc(routeName(v))}` : "Hat açık değil"}</dd>
@@ -961,6 +1021,35 @@ function renderDetail(side, v) {
   $("#cpip", side).onclick = () => { navigator.clipboard && navigator.clipboard.writeText(v.ip).then(() => toast("IP kopyalandı: " + v.ip), () => toast("Kopyalanamadı, IP: " + v.ip)); };
   side.querySelectorAll("[data-act]").forEach(b => b.onclick = () => toast(b.dataset.act + " komutu " + v.kapi + " için kuyruğa alındı (örnek)"));
   bindAlerts(side);
+  const tk = $("#trk", side);
+  if (tk) tk.addEventListener("pointerdown", e => {
+    if (e.target.closest("#follow")) { st.follow = !st.follow; tk.innerHTML = trackHTML(v); if (st.follow) followTo(v); }
+    const o = e.target.closest("[data-k]"); if (o) select(byKapi[+o.dataset.k], true);
+  });
+}
+function trackHTML(v) {
+  const r = v.route, d = v.t * r.len, mps = Math.max(v.speed, 15) / 3.6, nx = nextStopIdx(v);
+  const mins = m => Math.max(1, Math.round(Math.abs(m) / mps / 60));
+  const dist = m => m >= 1000 ? (m / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(m / 10) * 10 + " m";
+  const others = V.filter(x => x !== v && x.route === r && x.status === "hatta").map(x => ({ x, dd: (x.t - v.t) * r.len }));
+  const ahead = others.filter(o => o.dd > 0).sort((a, b) => a.dd - b.dd)[0], behind = others.filter(o => o.dd < 0).sort((a, b) => b.dd - a.dd)[0];
+  const nextD = r.stopT[nx] * r.len - d;
+  const rows = [];
+  for (let i = Math.max(0, nx - 2); i < Math.min(r.stops.length, nx + 5); i++) {
+    if (i === nx) rows.push(`<div class="srow bus"><i class="sd"></i><span class="nm"><b class="mono">${v.kapi}</b> · ${v.speed} km/sa${v.src === "est" ? " · GPS kopuk" : ""}</span><span class="eta">şimdi</span></div>`);
+    const seg = others.filter(o => { const t = o.x.t; return t >= r.stopT[i] && (i + 1 >= r.stops.length || t < r.stopT[i + 1]); });
+    const ahead_ = r.stopT[i] * r.len - d;
+    rows.push(`<div class="srow${i < nx ? " passed" : i === nx ? " next" : ""}"><i class="sd"></i><span class="nm">${esc(r.stops[i][0])}${seg.map(o => `<button type="button" class="oth" data-k="${o.x.kapi}" title="Aynı hattaki araç">${o.x.kapi}</button>`).join("")}</span><span class="eta">${i < nx ? "geçti" : mins(ahead_) + " dk"}</span></div>`);
+  }
+  return `<h3>Hat takibi <small>Hat ${esc(r.code)} · ${r.stops.length} durak</small></h3>
+    <div class="tstats">
+      <div class="hcell"><small>Sıradaki durak</small><b>${esc(r.stops[nx][0])}</b><small>${mins(nextD)} dk · ${dist(nextD)}</small></div>
+      <div class="hcell"><small>Hız</small><b>${v.speed} km/sa</b><small>${v.src === "est" ? "CAN+KML tahmini" : "GPS"}</small></div>
+      <div class="hcell"><small>Öndeki araç</small><b>${ahead ? `<button type="button" class="lnk" data-k="${ahead.x.kapi}">${ahead.x.kapi}</button>` : "—"}</b><small>${ahead ? mins(ahead.dd) + " dk önde" : "hatta önde araç yok"}</small></div>
+      <div class="hcell"><small>Arkadaki araç</small><b>${behind ? `<button type="button" class="lnk" data-k="${behind.x.kapi}">${behind.x.kapi}</button>` : "—"}</b><small>${behind ? mins(behind.dd) + " dk geride" : "hatta arkada araç yok"}</small></div>
+    </div>
+    <div class="strip">${rows.join("")}</div>
+    <button type="button" id="follow" class="btn" aria-pressed="${st.follow}">${st.follow ? "Haritada takip ediliyor · bırak" : "Haritada takip et"}</button>`;
 }
 
 function select(v, fly) {
@@ -1061,31 +1150,71 @@ function focusSpoof(i) { const e = SPOOF[i]; st.sel = e.v; renderSide(); fitBoun
 
 function renderUpdates() {
   const view = $("#view");
-  const vs = V.filter(inRegion), n = vs.length;
-  const by = k => vs.filter(v => v.panel === k).length;
-  const stages = [["Pilot", "10 araç", 10, 10, "done"], ["%5", "102 araç", 102, 102, "done"], ["%25", "508 araç", 380, 508, "run"], ["Tüm filo", "2.032 araç", 0, 2032, ""]];
-  const bar = (label, parts) => `<div class="vbar"><span>${label}</span><span class="track">${parts.map(p => `<i style="width:${p[1] / n * 100}%;background:${p[2]}" title="${p[0]}: ${p[1]}"></i>`).join("")}</span><span class="num" style="text-align:right">${fmt(n)}</span></div>`;
-  view.innerHTML = `<div class="viewhead"><h2>Güncellemeler</h2><span class="count">BusPanel 1.4.1 · kademeli yayın sürüyor</span></div>
+  const all = V.filter(inRegion), tgt = all.filter(v => v.upd !== "next");
+  const cnt = u => tgt.filter(v => v.upd === u).length;
+  const okN = cnt("ok"), pct = tgt.length ? Math.round(okN / tgt.length * 100) : 0;
+  const order = ["ok", "wait", "dl", "queued", "err", "rb"];
+  const seg = order.map(u => `<i style="width:${tgt.length ? cnt(u) / tgt.length * 100 : 0}%;background:var(--${UPD_LABEL[u][1]})${u === "wait" ? ";opacity:.55" : ""}" title="${UPD_LABEL[u][0]}: ${cnt(u)}"></i>`).join("");
+  const tonight = tgt.filter(v => v.upd === "wait" || v.upd === "dl" || v.upd === "queued");
+  const regRows = REGIONS.filter(R => !st.region || R.n === st.region).map(R => { const t = V.filter(v => v.region === R.n && v.upd !== "next"), ok = t.filter(v => v.upd === "ok").length; return `<tr><td>${R.name}</td><td class="num">${t.length}</td><td class="num">${ok}</td><td class="num">${t.filter(v => v.upd === "wait").length}</td><td class="num">${t.filter(v => v.upd === "dl" || v.upd === "queued").length}</td><td class="num" style="color:${t.some(v => v.upd === "err" || v.upd === "rb") ? "var(--crit)" : "inherit"}">${t.filter(v => v.upd === "err" || v.upd === "rb").length}</td><td style="width:30%"><span class="prog"><i style="width:${t.length ? ok / t.length * 100 : 0}%"></i></span></td></tr>`; }).join("");
+  // health chart: crashes per 1000 vehicle-hours, last 7 days
+  const days = ["5 Kas", "6 Kas", "7 Kas", "8 Kas", "9 Kas", "10 Kas", "11 Kas"], OLD = [0.62, 0.58, 0.61, 0.57, 0.60, 0.59, 0.60], NEW = [null, null, 0.55, 0.47, 0.43, 0.41, 0.40];
+  const cw = 420, ch = 150, pl = 34, pr = 12, pt = 10, pb = 26, X = i => pl + i * (cw - pl - pr) / 6, Y = val => pt + (1 - val / 0.8) * (ch - pt - pb);
+  const line = (arr, col) => { const pts = arr.map((val, i) => val == null ? null : [X(i), Y(val)]).filter(Boolean); return `<polyline points="${pts.map(p => p.join(",")).join(" ")}" fill="none" stroke="${col}" stroke-width="2.4"/>` + pts.map((p, i) => `<circle cx="${p[0]}" cy="${p[1]}" r="${i === pts.length - 1 ? 4 : 2.5}" fill="${col}"/>`).join(""); };
+  const chart = `<svg viewBox="0 0 ${cw} ${ch}" style="width:100%;max-width:100%;height:auto" role="img" aria-label="Çökme oranı karşılaştırması">${[0, 0.2, 0.4, 0.6, 0.8].map(t => `<line x1="${pl}" x2="${cw - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="var(--line)"/><text x="${pl - 6}" y="${Y(t) + 4}" text-anchor="end" font-size="10" fill="var(--muted)">${String(t).replace(".", ",")}</text>`).join("")}${days.map((d, i) => `<text x="${X(i)}" y="${ch - 8}" text-anchor="middle" font-size="10" fill="var(--muted)">${d}</text>`).join("")}${line(OLD, "var(--off)")}${line(NEW, "var(--accent)")}</svg>`;
+  const f = st.updFilter, list = tgt.filter(v => !f || v.upd === f).sort((a, b) => order.indexOf(b.upd === "err" || b.upd === "rb" ? "ok" : "x") - 0 || a.updAgo - b.updAgo);
+  const prio = u => ({ err: 0, rb: 1, queued: 2, dl: 3, wait: 4, ok: 5 }[u]);
+  list.sort((a, b) => prio(a.upd) - prio(b.upd) || a.updAgo - b.updAgo);
+  const note = v => v.updNote || (v.upd === "wait" ? "Araç seferde; hat kapanınca ya da gece garajda kurulacak" : v.upd === "dl" ? "Arka planda indiriliyor (%" + (20 + v.kapi % 70) + ")" : v.upd === "queued" ? "Araç bağlanınca indirme başlayacak" : v.upd === "ok" ? "Sağlıklı açılış bildirildi" : "");
+  const confirm = st.updConfirm === "rb" ? `<div class="confirm"><b>Geri alma onayı</b><span>${okN} araç BusPanel 1.4.0'a dönecek. Araçlar sefer dışında ya da gece garajda kurulur; yolcu ekranı kesilmez.</span><div><button class="btn" data-a="cancel">Vazgeç</button><button class="btn danger" data-a="rbok">Geri al</button></div></div>`
+    : st.updConfirm === "pause" ? `<div class="confirm"><b>Yayını duraklat</b><span>Yeni indirme ve kurulum başlamaz; kurulu ${okN} araç 1.4.1'de kalır.</span><div><button class="btn" data-a="cancel">Vazgeç</button><button class="btn primary" data-a="pauseok">Duraklat</button></div></div>` : "";
+  view.innerHTML = `<div class="viewhead"><h2>Güncellemeler</h2><span class="count">${st.region ? REGIONS[st.region - 1].name + " · " : ""}kademeli yayın</span></div>
   <div class="upd">
-    <div class="stages">${stages.map(s => `<div class="stage-c ${s[4]}"><b>${s[0]}</b><small>${s[1]}${s[4] === "done" ? " · tamamlandı" : s[4] === "run" ? " · sürüyor" : " · bekliyor"}</small><span class="prog"><i style="width:${s[2] / s[3] * 100}%"></i></span><small class="num">${fmt(s[2])} / ${fmt(s[3])} kuruldu</small></div>`).join("")}</div>
+    <div class="rel">
+      <div class="relh"><div><small>Yayındaki sürüm</small><b>BusPanel 1.4.1</b><span>1.4.0'dan · 7 Kasım 2026'da başladı</span></div><div class="relact"><button class="btn" data-a="pause">Duraklat</button><button class="btn" data-a="next" disabled title="Kurulum en az %95 olmalı">Sonraki aşama<small>%${pct} kuruldu · en az %95 gerekli</small></button><button class="btn danger" data-a="rb">Geri al</button></div></div>
+      ${confirm}
+      <ul class="notes"><li>Çalacak anons önceliği: önbellekte olmayan anons da zamanında çalıyor</li><li>Reklam videosu uygulama hafızasındaki kopyadan oynuyor, takılma giderildi</li><li>Plaka ve sicil yalnız validatörde hat açıkken</li></ul>
+      <div class="meta mono"><span>247 MB</span><span>SHA-256 3f9a…c21e</span><span>İmza: Rubuplus release · doğrulandı</span></div>
+    </div>
+    <div class="stages">${STAGES.map(sg => { const n = sg.run ? tgt.length : sg.n, done = sg.done ? sg.n : sg.run ? okN : 0; return `<div class="stage-c ${sg.done ? "done" : sg.run ? "run" : ""}"><b>${sg.name}</b><small>${fmt(sg.n)} araç · ${sg.done ? "tamamlandı" : sg.run ? "sürüyor" : "bekliyor"}</small><span class="prog"><i style="width:${n ? done / n * 100 : 0}%"></i></span><small>${sg.done ? "Çökme oranı önceki sürümden düşük ✓" : sg.run ? `${fmt(done)} / ${fmt(n)} kuruldu` : "Geçiş: %95 kurulum + çökme ≤ önceki"}</small></div>`; }).join("")}</div>
     <div class="grid2">
+      <div class="box"><h4>Bu aşamadaki araçlar · ${fmt(tgt.length)}</h4>
+        <div class="vbar" style="grid-template-columns:1fr"><span class="track" style="height:14px">${seg}</span></div>
+        <div class="legend2">${order.map(u => `<button data-f="${u}" aria-pressed="${st.updFilter === u}"><i class="dot" style="background:var(--${UPD_LABEL[u][1]})${u === "wait" ? ";opacity:.55" : ""}"></i>${UPD_LABEL[u][0]} <b>${cnt(u)}</b></button>`).join("")}</div>
+      </div>
+      <div class="box"><h4>Bu gece kurulum planı</h4>
+        <p class="m"><b>02:00–05:00</b> arası garajda, kontak açıkken kurulacak: <b>${fmt(tonight.length)} araç</b>. Seferdeki araçlara kurulum yapılmaz; hat kapanıp araç durunca ya da gece kurulur.</p>
+        ${REGIONS.filter(R => !st.region || R.n === st.region).map(R => { const n = tonight.filter(v => v.region === R.n).length, mx = Math.max(1, ...REGIONS.map(Q => tonight.filter(v => v.region === Q.n).length)); return `<div class="vbar"><span>${R.name}</span><span class="track"><i style="width:${n / mx * 100}%;background:var(--accent)"></i></span><span class="num" style="text-align:right">${n}</span></div>`; }).join("")}
+      </div>
       <div class="box"><h4>Yeni sürüm sağlığı</h4>
-        <div class="metric"><span>Çökme oranı (24 sa)</span><b class="num">%0,4 <small style="color:var(--ok);font-weight:400">önceki %0,6</small></b></div>
-        <div class="metric"><span>Ortalama anons gecikmesi</span><b class="num">0,8 sn <small style="color:var(--ok);font-weight:400">önceki 1,1 sn</small></b></div>
-        <div class="metric"><span>5 dk içinde sağlıklı açılış</span><b class="num">380 / 380</b></div>
-        <div class="metric"><span>Otomatik geri dönüş</span><b class="num">0</b></div>
-        <div class="metric"><span>Sorunlu araç</span><b class="num" style="color:var(--warn)">2208 · 3 çökme</b></div>
-      </div>
-      <div class="box"><h4>Sürüm dağılımı ${st.region ? "· " + REGIONS[st.region - 1].name : ""}</h4>
-        ${bar("BusPanel", [["1.4.1", by("1.4.1"), "var(--accent)"], ["1.4.0", by("1.4.0"), "var(--ok)"], ["1.3.2", by("1.3.2"), "var(--warn)"]])}
-        <div style="display:flex;gap:14px;font-size:12px;color:var(--muted);flex-wrap:wrap"><span><i class="dot" style="background:var(--accent)"></i> 1.4.1 · ${fmt(by("1.4.1"))}</span><span><i class="dot" style="background:var(--ok)"></i> 1.4.0 · ${fmt(by("1.4.0"))}</span><span><i class="dot" style="background:var(--warn)"></i> 1.3.2 · ${fmt(by("1.3.2"))}</span></div>
-        ${bar("EGO CAN", [["0.3.1", n, "var(--ok)"]])}${bar("Ajan", [["0.9.4", n, "var(--ok)"]])}
-      </div>
-      <div class="box"><h4>Yolcuyu rahatsız etmeme kuralları</h4>
-        <ol class="rules"><li>İndirme seferde yapılabilir, kurulum yapılmaz.</li><li>Kurulum gece garajda ya da sefer dışında: hat kapalı, araç duruyor, 5 dk anons yok.</li><li>Kurulumda ekranda 3–5 sn Ankara görseli kalır, panel kaldığı duraktan devam eder.</li><li>5 dk içinde "sağlıklı" bildirimi gelmezse önceki sürüme dönülür, yayın durur.</li><li>Her adımda çökme oranı ve anons gecikmesi önceki sürümle karşılaştırılır.</li></ol>
+        <div style="display:flex;gap:14px;font-size:12px;color:var(--muted)"><span><i class="dot" style="background:var(--accent)"></i> 1.4.1</span><span><i class="dot" style="background:var(--off)"></i> 1.4.0</span><span>Çökme / 1000 araç-saat</span></div>
+        ${chart}
+        <div class="metric"><span>Anons gecikmesi (ortalama)</span><b class="num">0,8 sn <small style="color:var(--ok);font-weight:400">1.4.0: 1,1 sn</small></b></div>
+        <div class="metric"><span>5 dk içinde sağlıklı açılış</span><b class="num">${okN} / ${okN + cnt("rb")}</b></div>
+        <div class="metric"><span>Otomatik geri dönüş</span><b class="num" style="color:${cnt("rb") ? "var(--warn)" : "inherit"}">${cnt("rb")}</b></div>
       </div>
     </div>
+    <div class="box"><h4>Bölgelere göre ilerleme</h4>
+      <div class="tablewrap"><table><thead><tr><th>Bölge</th><th>Hedef</th><th>Kuruldu</th><th>Seferde bekliyor</th><th>İndiriliyor / sırada</th><th>Hata / geri</th><th>İlerleme</th></tr></thead><tbody>${regRows}</tbody></table></div>
+    </div>
+    <div class="box"><h4>Araçlar ${f ? "· " + UPD_LABEL[f][0] : ""} <small style="font-family:var(--body);font-weight:400;color:var(--muted)">${fmt(list.length)}</small></h4>
+      <div class="tablewrap"><table><thead><tr><th>Kapı no</th><th>Bölge</th><th>Tip</th><th>Durum</th><th>Sürüm</th><th>Son adım</th><th>Not</th></tr></thead><tbody>${list.slice(0, st.updRows).map(v => `<tr data-k="${v.kapi}"><td class="mono"><b>${v.kapi}</b></td><td>${v.region}. Bölge</td><td>${TYPE[v.type]}</td><td><span class="pill ${UPD_LABEL[v.upd][1] === "accent" ? "est" : UPD_LABEL[v.upd][1]}">${UPD_LABEL[v.upd][0]}</span></td><td class="mono">${v.upd === "ok" ? "1.4.0 → 1.4.1" : v.upd === "rb" ? "1.4.1 → 1.4.0" : v.panel + " → 1.4.1"}</td><td>${agoText(v.updAgo)}</td><td style="white-space:normal;min-width:220px">${esc(note(v))}</td></tr>`).join("")}</tbody></table></div>
+      ${list.length > st.updRows ? `<button class="btn more" data-a="more">Daha fazla göster</button>` : ""}
+    </div>
+    <div class="box"><h4>Yolcuyu rahatsız etmeme kuralları</h4>
+      <ol class="rules"><li>İndirme seferde yapılabilir, kurulum yapılmaz.</li><li>Kurulum gece garajda ya da sefer dışında: hat kapalı, araç duruyor, 5 dk anons yok.</li><li>Kurulumda ekranda 3–5 sn Ankara görseli kalır, panel kaldığı duraktan devam eder.</li><li>5 dk içinde "sağlıklı" bildirimi gelmezse önceki sürüme dönülür, yayın kendiliğinden durur.</li><li>Her aşamada çökme oranı ve anons gecikmesi önceki sürümle karşılaştırılır.</li></ol>
+    </div>
   </div>`;
+  view.querySelectorAll("[data-f]").forEach(b => b.onclick = () => { st.updFilter = st.updFilter === b.dataset.f ? "" : b.dataset.f; st.updRows = 40; renderUpdates(); });
+  view.querySelectorAll("tr[data-k]").forEach(tr => tr.onclick = () => select(byKapi[+tr.dataset.k]));
+  view.querySelectorAll("[data-a]").forEach(b => b.onclick = () => {
+    const a = b.dataset.a;
+    if (a === "more") { st.updRows += 60; return renderUpdates(); }
+    if (a === "rb" || a === "pause") { st.updConfirm = a; return renderUpdates(); }
+    if (a === "cancel") { st.updConfirm = ""; return renderUpdates(); }
+    if (a === "rbok") { st.updConfirm = ""; renderUpdates(); return toast("Geri alma başlatıldı: araçlar sefer dışında 1.4.0'a dönecek (örnek)"); }
+    if (a === "pauseok") { st.updConfirm = ""; renderUpdates(); return toast("Yayın duraklatıldı (örnek)"); }
+  });
 }
 
 /* ---------- Search ---------- */
@@ -1122,6 +1251,8 @@ function tick() {
   });
   if (feed.length > 40) feed.length = 40;
   if (st.view === "harita" || st.view === "gps") drawBuses();
+  if (st.follow && st.sel && st.sel.route && st.sel.status === "hatta" && st.view === "harita") followTo(st.sel);
+  const tk = $("#trk"); if (tk && st.sel && st.sel.route) tk.innerHTML = trackHTML(st.sel);
   const f = $("#feed"); if (f) f.innerHTML = feedHTML();
   const ws = $("#wsec"); if (ws && !st.sel) ws.innerHTML = watchHTML();
   if (st.sel && st.sel.route && st.sel.status === "hatta") {
@@ -1143,7 +1274,7 @@ function renderAll(fit) {
 }
 
 /* ---------- Google Maps layer (used when a Maps API key is configured) ---------- */
-const ORIG = { drawBuses, drawSel, drawGps, drawRegions, drawWatch, fitBounds, setVB };
+const ORIG = { drawBuses, drawSel, drawGps, drawRegions, drawWatch, fitBounds, setVB, followTo };
 function useGoogle() {
   const g = google.maps;
   const box = $("#gmap"); box.hidden = false; svg.style.display = "none"; $(".attr").hidden = true;
@@ -1181,7 +1312,7 @@ function useGoogle() {
   drawBuses = function () {
     V.forEach(v => {
       const cls = busClass(v);
-      const always = v === st.sel || (v.status === "hatta" && isWatched(v)) || (st.show.iss && v.issues.length > 0);
+      const always = v === st.sel || (v.status === "hatta" && isWatched(v)) || (st.show.iss && v.issues.length > 0) || (st.ltab === "garage" && st.region === v.region && (v.status === "garajda" || v.status === "bakim"));
       const show = st.view === "harita" && (st.show[cls] || always) && !(st.region && v.region !== st.region);
       if (!show) { if (v.gm) v.gm.setVisible(false); return; }
       const sv = sevOf(v);
@@ -1236,13 +1367,14 @@ function useGoogle() {
   };
   fitBounds = function (pts) { const b = new g.LatLngBounds(); pts.forEach(p => b.extend(toLL(p))); map.fitBounds(b, 70); };
   setVB = function (vb) { map.panTo(toLL([vb[0] + vb[2] / 2, vb[1] + vb[3] / 2])); map.setZoom(Math.max(map.getZoom(), 15)); };
+  followTo = function (v) { map.panTo(LL(v.lat, v.lon)); };
   $("#zin").onclick = () => map.setZoom(map.getZoom() + 1);
   $("#zout").onclick = () => map.setZoom(map.getZoom() - 1);
   // Google hata verirse (faturalandırma, API kapalı, adres kilidi) karartılmış harita yerine OpenStreetMap
   let fellBack = false;
   const toOSM = msg => {
     if (fellBack) return; fellBack = true; mo.disconnect();
-    drawBuses = ORIG.drawBuses; drawSel = ORIG.drawSel; drawGps = ORIG.drawGps; drawRegions = ORIG.drawRegions; drawWatch = ORIG.drawWatch; fitBounds = ORIG.fitBounds; setVB = ORIG.setVB;
+    drawBuses = ORIG.drawBuses; followTo = ORIG.followTo; drawSel = ORIG.drawSel; drawGps = ORIG.drawGps; drawRegions = ORIG.drawRegions; drawWatch = ORIG.drawWatch; fitBounds = ORIG.fitBounds; setVB = ORIG.setVB;
     box.hidden = true; svg.style.display = ""; $(".attr").hidden = false;
     $("#zin").onclick = () => zoomAt(1 / 1.5, st.vb[0] + st.vb[2] / 2, st.vb[1] + st.vb[3] / 2);
     $("#zout").onclick = () => zoomAt(1.5, st.vb[0] + st.vb[2] / 2, st.vb[1] + st.vb[3] / 2);
